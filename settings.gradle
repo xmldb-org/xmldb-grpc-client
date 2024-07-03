@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 plugins {
-  id 'org.ajoberstar.reckon.settings' version '0.18.0'
+  id 'org.ajoberstar.reckon.settings' version '0.18.3'
 }
 
 reckon {
