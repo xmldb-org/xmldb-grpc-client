@@ -38,10 +38,12 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
       XmlDbServiceGrpc.XmlDbServiceBlockingStub blockingStub) {
     this.parent = parent;
     this.blockingStub = blockingStub;
+    LOGGER.info("Created collection {}", this);
   }
 
   @Override
   public String getName() throws XMLDBException {
+    LOGGER.info("getName() with {}", blockingStub);
     return null;
   }
 

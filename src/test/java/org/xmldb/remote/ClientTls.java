@@ -26,8 +26,11 @@ import org.xmldb.api.grpc.Messages.VersionResponse;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
 import io.grpc.Channel;
+import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
+import io.grpc.ServerCredentials;
 import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
 
@@ -71,29 +74,38 @@ public class ClientTls {
           + "clientPrivateKeyFilePath are only needed if mutual auth is desired.");
       System.exit(0);
     }
-
-    // If only defaults are necessary, you can use TlsChannelCredentials.create() instead of
-    // interacting with the Builder.
-    TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
-    switch (args.length) {
-      case 5:
-        tlsBuilder.keyManager(new File(args[3]), new File(args[4]));
-        // fallthrough
-      case 3:
-        tlsBuilder.trustManager(new File(args[2]));
-        // fallthrough
-      default:
-    }
-    String host = args[0];
-    int port = Integer.parseInt(args[1]);
-    ManagedChannel channel = Grpc.newChannelBuilderForAddress(host, port, tlsBuilder.build())
-        /* Only for using provided test certs. */
-        .overrideAuthority("foo.test.google.fr").build();
     try {
-      ClientTls client = new ClientTls(channel);
-      client.version();
-    } finally {
-      channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+      final ChannelCredentials channelCredentials;
+      if (args.length == 2) {
+        channelCredentials = InsecureChannelCredentials.create();
+      } else {
+        // If only defaults are necessary, you can use TlsChannelCredentials.create() instead of
+        // interacting with the Builder.
+        TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
+        switch (args.length) {
+          case 5:
+            tlsBuilder.keyManager(new File(args[3]), new File(args[4]));
+            // fallthrough
+          case 3:
+            tlsBuilder.trustManager(new File(args[2]));
+            // fallthrough
+          default:
+        }
+        channelCredentials = tlsBuilder.build();
+      }
+      String host = args[0];
+      int port = Integer.parseInt(args[1]);
+      ManagedChannel channel = Grpc.newChannelBuilderForAddress(host, port, channelCredentials)
+          /* Only for using provided test certs. */
+          .overrideAuthority("foo.test.google.fr").build();
+      try {
+        ClientTls client = new ClientTls(channel);
+        client.version();
+      } finally {
+        channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
+      }
+    } catch (Exception e) {
+      LOGGER.error("Failed to start client", e);
     }
   }
 }
