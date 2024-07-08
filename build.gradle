@@ -74,15 +74,6 @@ jar {
                       'Automatic-Module-Name': "org.xmldb.remote"
 }
 
-sourceSets {
-  main {
-    java {
-      srcDirs 'build/generated/source/proto/main/grpc'
-      srcDirs 'build/generated/source/proto/main/java'
-    }
-  }
-}
-
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler

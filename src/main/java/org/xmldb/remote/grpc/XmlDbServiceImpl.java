@@ -8,15 +8,20 @@
  */
 package org.xmldb.remote.grpc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmldb.api.grpc.Messages;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
 import io.grpc.stub.StreamObserver;
 
 public class XmlDbServiceImpl extends XmlDbServiceGrpc.XmlDbServiceImplBase {
+  private static final Logger LOGGER = LoggerFactory.getLogger(XmlDbServiceImpl.class);
+
   @Override
   public void versionCall(Messages.EmptyRequest request,
       StreamObserver<Messages.VersionResponse> responseObserver) {
+    LOGGER.info("versionCall({})", request);
     Messages.VersionResponse response =
         Messages.VersionResponse.newBuilder().setMajor(1).setMinor(0).build();
     responseObserver.onNext(response);
