@@ -49,7 +49,7 @@ dependencies {
   implementation 'net.sf.xmldb-org:xmldb-api:+'
 
   // used for server / client
-  implementation 'io.grpc:grpc-netty-shaded:1.65.1'
+  implementation 'io.grpc:grpc-netty-shaded:1.66.0'
 
   testImplementation 'org.assertj:assertj-core:3.26.3'
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
