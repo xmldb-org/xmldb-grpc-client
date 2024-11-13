@@ -14,6 +14,7 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
+
 package org.xmldb.remote;
 
 import java.io.File;
@@ -21,46 +22,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xmldb.api.grpc.Messages.EmptyRequest;
-import org.xmldb.api.grpc.Messages.VersionResponse;
-import org.xmldb.api.grpc.XmlDbServiceGrpc;
+import org.xmldb.remote.client.RemoteClient;
 
-import io.grpc.Channel;
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
-import io.grpc.ServerCredentials;
-import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
 
 public class ClientTls {
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientTls.class);
-
-  private final XmlDbServiceGrpc.XmlDbServiceBlockingStub blockingStub;
-
-  /**
-   * Construct client for accessing RouteGuide server using the existing channel.
-   */
-  public ClientTls(Channel channel) {
-    blockingStub = XmlDbServiceGrpc.newBlockingStub(channel);
-  }
-
-  /**
-   * version from server.
-   */
-  public void version() {
-    LOGGER.info("Will try to version ...");
-    EmptyRequest request = EmptyRequest.getDefaultInstance();
-    VersionResponse response;
-    try {
-      response = blockingStub.versionCall(request);
-    } catch (StatusRuntimeException e) {
-      LOGGER.info("RPC failed: {}", e.getStatus());
-      return;
-    }
-    LOGGER.info("Greeting: {}", response.getMajor());
-  }
 
   /**
    * Greet server. If provided, the first element of {@code args} is the name to use in the
@@ -99,7 +70,7 @@ public class ClientTls {
           /* Only for using provided test certs. */
           .overrideAuthority("foo.test.google.fr").build();
       try {
-        ClientTls client = new ClientTls(channel);
+        RemoteClient client = new RemoteClient(channel);
         client.version();
       } finally {
         channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
