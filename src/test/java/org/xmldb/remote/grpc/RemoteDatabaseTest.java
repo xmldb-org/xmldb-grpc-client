@@ -10,12 +10,14 @@
 package org.xmldb.remote.grpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.remote.client.RemoteDatabase;
 
@@ -48,13 +50,18 @@ class RemoteDatabaseTest {
   }
 
 
-  @Test
-  void getCollection() throws XMLDBException {
-    // db.getCollection("xmldb:grpc://[::1]:4711/db", properties("guest", "guest"));
-    // db.getCollection("xmldb:grpc://127.0.0.1:4711/db", properties("johnDoe", "mySecret"));
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+      xmldb:grpc://[::1]:4711/db,     guest,   guest
+      xmldb:grpc://127.0.0.1:4711/db, johnDoe, mySecret
+      """)
+  void getCollection(String uri, String user, String secret) throws XMLDBException {
+    var collection = db.getCollection(uri, properties(user, secret));
+    assertThat(collection).isNotNull();
+    assertThatNoException().isThrownBy(collection::close);
   }
 
-  private Properties properties(String user, String pwd) {
+  Properties properties(String user, String pwd) {
     Properties properties = new Properties();
     properties.setProperty("user", user);
     properties.setProperty("password", pwd);
