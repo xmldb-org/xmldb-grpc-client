@@ -42,8 +42,11 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
       LOGGER.error("Error getting collection for URI {}", uri, e);
     }
     if (connectionInfo != null) {
-      final RemoteClient remoteClient = new RemoteClient(connectionInfo);
-      remoteClient.version();
+      final var channel = connectionInfo.openChannel();
+      final var credentials = new AuthenticationCredentials(connectionInfo::authentication);
+      final var remoteClient = new RemoteClient(channel, credentials);
+      remoteClient.systemInfo();
+      channel.shutdownNow();
       return new RemoteCollection(null, remoteClient);
     }
     return null;

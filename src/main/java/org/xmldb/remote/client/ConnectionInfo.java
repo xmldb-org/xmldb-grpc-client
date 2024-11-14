@@ -9,6 +9,9 @@
 
 package org.xmldb.remote.client;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.util.Base64;
 import java.util.Properties;
 
 import io.grpc.ChannelCredentials;
@@ -17,6 +20,13 @@ import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 
 record ConnectionInfo(String host, int port, String dbPath, Properties info) {
+  String authentication() {
+    var username = info.getProperty("username", "");
+    var password = info.getProperty("password", "");
+    var authentication = "%s:%s".formatted(username, password);
+    return Base64.getEncoder().encodeToString(authentication.getBytes(UTF_8));
+  }
+
   ManagedChannel openChannel() {
     ChannelCredentials channelCredentials = InsecureChannelCredentials.create();
     return Grpc.newChannelBuilderForAddress(host, port, channelCredentials).build();

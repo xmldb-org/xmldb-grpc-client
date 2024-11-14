@@ -11,9 +11,11 @@ package org.xmldb.remote.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xmldb.api.grpc.Messages;
+import org.xmldb.api.grpc.EmptyRequest;
+import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
+import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.StatusRuntimeException;
 
@@ -22,27 +24,24 @@ public final class RemoteClient {
 
   private final XmlDbServiceGrpc.XmlDbServiceBlockingStub blockingStub;
 
-  public RemoteClient(final ConnectionInfo connectionInfo) {
-    this(connectionInfo.openChannel());
-  }
-
-  public RemoteClient(final Channel channel) {
-    blockingStub = XmlDbServiceGrpc.newBlockingStub(channel);
+  public RemoteClient(final Channel channel, final CallCredentials callCredentials) {
+    blockingStub = XmlDbServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
   }
 
   /**
    * version from server.
    */
-  public void version() {
+  public SystemInfo systemInfo() {
     LOGGER.info("Will try to version ...");
-    Messages.EmptyRequest request = Messages.EmptyRequest.getDefaultInstance();
-    Messages.Version response;
+    EmptyRequest request = EmptyRequest.getDefaultInstance();
     try {
-      response = blockingStub.versionCall(request);
+      SystemInfo response = blockingStub.getSystemInfo(request);
+      LOGGER.info("Greeting: {}", response.getJavaVersion());
+      return response;
     } catch (StatusRuntimeException e) {
       LOGGER.info("RPC failed: {}", e.getStatus());
-      return;
+      return null;
     }
-    LOGGER.info("Greeting: {}", response.getMajor());
   }
+
 }

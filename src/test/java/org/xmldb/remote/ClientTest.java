@@ -33,8 +33,7 @@ class ClientTest {
 
   @Test
   void openDatabase() throws XMLDBException {
-    final Collection rootCollection =
-        DatabaseManager.getCollection("xmldb:grpc://localhost:4711/db");
+    final Collection rootCollection = DatabaseManager.getCollection("xmldb:grpc://[::1]:4711/db");
     assertThat(rootCollection).isNotNull();
   }
 }
