@@ -35,7 +35,7 @@ public final class RemoteClient {
     LOGGER.info("Will try to version ...");
     EmptyRequest request = EmptyRequest.getDefaultInstance();
     try {
-      SystemInfo response = blockingStub.getSystemInfo(request);
+      SystemInfo response = blockingStub.systemInfo(request);
       LOGGER.info("Greeting: {}", response.getJavaVersion());
       return response;
     } catch (StatusRuntimeException e) {
