@@ -129,7 +129,7 @@ spotless {
 
 test {
   useJUnitPlatform {
-    excludeTags('remote')
+    excludeTags 'remote'
     includeEngines 'junit-jupiter'
   }
   include '**/*Test.class'
