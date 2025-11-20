@@ -44,9 +44,11 @@ public class ClientTls {
   public static void main(String[] args) throws Exception {
 
     if (args.length < 2 || args.length == 4 || args.length > 5) {
-      System.out.println("USAGE: HelloWorldClientTls host port [trustCertCollectionFilePath "
-          + "[clientCertChainFilePath clientPrivateKeyFilePath]]\n  Note: clientCertChainFilePath and "
-          + "clientPrivateKeyFilePath are only needed if mutual auth is desired.");
+      System.out.println(
+          """
+              USAGE: ClientTls host port [trustCertCollectionFilePath[clientCertChainFilePath clientPrivateKeyFilePath]]
+              Note: clientCertChainFilePath and clientPrivateKeyFilePath are only needed if mutual auth is desired.
+              """);
       System.exit(0);
     }
     try {
