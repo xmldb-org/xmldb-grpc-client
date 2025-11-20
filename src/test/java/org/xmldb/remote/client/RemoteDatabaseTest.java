@@ -7,7 +7,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.xmldb.remote.grpc;
+package org.xmldb.remote.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
@@ -17,9 +17,7 @@ import java.util.Properties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.XMLDBException;
-import org.xmldb.remote.client.RemoteDatabase;
 
 class RemoteDatabaseTest {
   RemoteDatabase db = new RemoteDatabase();
@@ -36,24 +34,23 @@ class RemoteDatabaseTest {
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-      gugus:grpc:,false
-      xmldb:exist:,false
-      xmldb:grpc:,false
-      xmldb:grpc://,false
-      xmldb:grpc:// :123,false
-      xmldb:grpc://host,false
-      xmldb:grpc://host:0,false
-      xmldb:grpc://host:4711,true
+      gugus:grpc:,            false
+      xmldb:exist:,           false
+      xmldb:grpc:,            false
+      xmldb:grpc://,          false
+      xmldb:grpc:// :123,     false
+      xmldb:grpc://host,      false
+      xmldb:grpc://host:0,    false
+      xmldb:grpc://host:9000, true
       """)
   void acceptsURI(String uri, boolean expected) {
     assertThat(db.acceptsURI(uri)).isEqualTo(expected);
   }
 
-
   @ParameterizedTest
   @CsvSource(textBlock = """
-      xmldb:grpc://[::1]:4711/db,     guest,   guest
-      xmldb:grpc://127.0.0.1:4711/db, johnDoe, mySecret
+      xmldb:grpc://[::1]:9000/db,     guest,   guest
+      xmldb:grpc://127.0.0.1:9000/db, johnDoe, mySecret
       """)
   void getCollection(String uri, String user, String secret) throws XMLDBException {
     var collection = db.getCollection(uri, properties(user, secret));

@@ -6,34 +6,24 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
-package org.xmldb.remote;
+package org.xmldb.remote.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.xmldb.api.DatabaseManager;
-import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.XMLDBException;
-import org.xmldb.remote.client.RemoteDatabase;
 
-class ClientTest {
-  RemoteDatabase db = new RemoteDatabase();
+public class RemoteTestExtension implements BeforeEachCallback, AfterEachCallback {
+  private final RemoteDatabase db = new RemoteDatabase();
 
-  @BeforeEach
-  void setUp() throws XMLDBException {
+  @Override
+  public void beforeEach(final ExtensionContext context) throws XMLDBException {
     DatabaseManager.registerDatabase(db);
   }
 
-  @AfterEach
-  void tearDown() {
+  @Override
+  public void afterEach(ExtensionContext context) throws Exception {
     DatabaseManager.deregisterDatabase(db);
-  }
-
-  @Test
-  void openDatabase() throws XMLDBException {
-    final Collection rootCollection = DatabaseManager.getCollection("xmldb:grpc://[::1]:4711/db");
-    assertThat(rootCollection).isNotNull();
   }
 }

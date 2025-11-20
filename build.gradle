@@ -13,7 +13,6 @@ plugins {
   id 'java-library'
   id 'java-test-fixtures'
   id 'com.diffplug.spotless' version '8.1.0'
-  id 'com.github.ben-manes.versions' version '0.53.0'
   id 'com.google.protobuf' version '0.9.5'
   id 'org.kordamp.gradle.java-project' version '0.54.0'
 }
@@ -34,6 +33,10 @@ defaultTasks 'build'
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
+}
+
+sourceSets.test {
+  java { srcDir 'src/remoteTest/java' }
 }
 
 repositories {
@@ -125,22 +128,14 @@ spotless {
 }
 
 test {
-  useJUnitPlatform()
+  useJUnitPlatform {
+    excludeTags('remote')
+    includeEngines 'junit-jupiter'
+  }
+  include '**/*Test.class'
+  include '**/*RT.class'
   testLogging {
     events 'skipped'
-  }
-}
-
-dependencyUpdates.resolutionStrategy {
-  componentSelection { rules ->
-    rules.all { ComponentSelection selection ->
-      boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm', 'pr', 'preview'].any { qualifier ->
-        selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
-      }
-      if (rejected) {
-        selection.reject('Release candidate')
-      }
-    }
   }
 }
 
