@@ -9,6 +9,7 @@
 package org.xmldb.remote.client;
 
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.xmldb.api.DatabaseManager;
+import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.XMLDBException;
 
 @RemoteTest
@@ -23,20 +25,28 @@ class RemoteDatabaseRT {
   @ParameterizedTest
   @MethodSource("serverUrls")
   void getCollection(String serverUrl) throws XMLDBException {
-    assertThat(DatabaseManager.getCollection(serverUrl)).isNotNull().satisfies(con -> {
-      assertThat(con.getResourceCount()).isEqualTo(2);
-      assertThat(con.listResources()).containsExactly("test1.xml", "test2.xml");
-    });
+    assertThat(DatabaseManager.getCollection(serverUrl)).isNotNull()
+        .satisfies(RemoteDatabaseRT::assertCollection);
   }
 
   @ParameterizedTest
   @MethodSource("serverUrls")
   void getCollectionWithCredentials(String serverUrl) throws XMLDBException {
     assertThat(DatabaseManager.getCollection(serverUrl, "guest", "guest")).isNotNull()
-        .satisfies(con -> {
-          assertThat(con.getResourceCount()).isEqualTo(2);
-          assertThat(con.listResources()).containsExactly("test1.xml", "test2.xml");
-        });
+        .satisfies(RemoteDatabaseRT::assertCollection);
+  }
+
+  private static void assertCollection(Collection collection) throws XMLDBException {
+    assertThat(collection.getResourceCount()).isEqualTo(2);
+    assertThat(collection.listResources()).containsExactlyInAnyOrder("test1.xml", "test2.xml");
+    assertThat(collection.getChildCollectionCount()).isEqualTo(1);
+    assertThat(collection.listChildCollections()).containsExactlyInAnyOrder("child");
+    assertThat(collection.getChildCollection("child")).isNotNull().satisfies(childCol -> {
+      assertThat(childCol.getResourceCount()).isEqualTo(1);
+      assertThat(childCol.listResources()).containsExactlyInAnyOrder("test3.xml");
+      assertThat(childCol.getChildCollectionCount()).isZero();
+      assertThat(childCol.listChildCollections()).isEmpty();
+    });
   }
 
   static Stream<String> serverUrls() {

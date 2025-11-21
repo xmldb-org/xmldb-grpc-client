@@ -69,7 +69,8 @@ class RemoteDatabaseTest {
       """)
   void getCollection(String uri, String user, String secret) throws XMLDBException {
     remoteClientMock.when(() -> RemoteClient.create(any())).thenReturn(remoteClient);
-    when(remoteClient.collection("/db")).thenReturn(CollectionMeta.newBuilder().build());
+    when(remoteClient.openRootCollection(uri, properties(user, secret)))
+        .thenReturn(CollectionMeta.newBuilder().build());
 
     var collection = db.getCollection(uri, properties(user, secret));
     assertThat(collection).isNotNull();

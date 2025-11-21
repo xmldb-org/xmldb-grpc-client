@@ -9,15 +9,23 @@
 
 package org.xmldb.remote.client;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmldb.api.base.ErrorCodes;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
-import org.xmldb.api.grpc.EmptyRequest;
-import org.xmldb.api.grpc.NameRequest;
+import org.xmldb.api.grpc.Count;
+import org.xmldb.api.grpc.Empty;
+import org.xmldb.api.grpc.HandleId;
+import org.xmldb.api.grpc.ResourceId;
+import org.xmldb.api.grpc.RootCollectionName;
 import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
@@ -27,7 +35,7 @@ import io.grpc.StatusRuntimeException;
 
 public final class RemoteClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteClient.class);
-  private static final EmptyRequest EMPTY_REQUEST = EmptyRequest.getDefaultInstance();
+  private static final Empty EMPTY = Empty.getDefaultInstance();
 
   private final XmlDbServiceGrpc.XmlDbServiceBlockingStub blockingStub;
 
@@ -64,8 +72,7 @@ public final class RemoteClient {
     }
   }
 
-  private static XMLDBException handleStatusException(StatusRuntimeException e)
-      throws XMLDBException {
+  private static XMLDBException handleStatusException(StatusRuntimeException e) {
     LOGGER.info("RPC failed: {}", e.getStatus());
     return new XMLDBException(ErrorCodes.VENDOR_ERROR, e.getStatus().getDescription(), e);
   }
@@ -75,13 +82,39 @@ public final class RemoteClient {
    */
   public SystemInfo systemInfo() throws XMLDBException {
     LOGGER.info("Will try to version ...");
-    return withStub(stub -> stub.systemInfo(EMPTY_REQUEST));
+    return withStub(stub -> stub.systemInfo(EMPTY));
   }
 
-  public CollectionMeta collection(String collectionName) throws XMLDBException {
-    LOGGER.info("Will try to get collection {} ...", collectionName);
-    return withStub(
-        stub -> stub.collection(NameRequest.newBuilder().setName(collectionName).build()));
+  public CollectionMeta openRootCollection(String uri, Properties info) throws XMLDBException {
+    LOGGER.info("Will try to get root collection {} ...", uri);
+    return withStub(stub -> {
+      final Map<String, String> infoMap = new HashMap<>();
+      info.forEach((key, value) -> infoMap.put(String.valueOf(key), String.valueOf(value)));
+      return stub.openRootCollection(
+          RootCollectionName.newBuilder().setUri(uri).putAllInfo(infoMap).build());
+    });
   }
 
+  public CollectionMeta openChildCollection(HandleId collectionHandle, String collectionName)
+      throws XMLDBException {
+    return withStub(stub -> stub.openChildCollection(ChildCollectionName.newBuilder()
+        .setCollectionId(collectionHandle).setChildName(collectionName).build()));
+  }
+
+  public Count resourceCount(HandleId collectionHandle) throws XMLDBException {
+    return withStub(stub -> stub.resourceCount(collectionHandle));
+  }
+
+  public Iterator<ResourceId> listResources(HandleId collectionHandle) throws XMLDBException {
+    return withStub(stub -> stub.listResources(collectionHandle));
+  }
+
+  public Count collectionCount(HandleId collectionHandle) throws XMLDBException {
+    return withStub(stub -> stub.collectionCount(collectionHandle));
+  }
+
+  public Iterator<ChildCollectionName> childCollections(HandleId collectionHandle)
+      throws XMLDBException {
+    return withStub(stub -> stub.childCollections(collectionHandle));
+  }
 }

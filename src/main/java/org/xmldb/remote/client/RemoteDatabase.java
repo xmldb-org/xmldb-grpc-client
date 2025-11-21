@@ -38,8 +38,8 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
     try {
       final var connectionInfo = parseConnectionInfo(uri, info);
       if (connectionInfo != null) {
-        return new RemoteCollection(null, RemoteClient.create(connectionInfo),
-            connectionInfo.dbPath());
+        RemoteClient remoteClient = RemoteClient.create(connectionInfo);
+        return new RemoteCollection(null, remoteClient, remoteClient.openRootCollection(uri, info));
       }
     } catch (RuntimeException e) {
       LOGGER.error("Error getting collection for URI {}", uri, e);

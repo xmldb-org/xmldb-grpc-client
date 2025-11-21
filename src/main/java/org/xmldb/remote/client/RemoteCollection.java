@@ -9,9 +9,13 @@
 
 package org.xmldb.remote.client;
 
+import static java.util.Spliterator.IMMUTABLE;
+import static java.util.Spliterators.spliteratorUnknownSize;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +23,9 @@ import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.Service;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
+import org.xmldb.api.grpc.ResourceId;
 
 public class RemoteCollection extends RemoteConfigurable implements Collection {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteCollection.class);
@@ -28,11 +34,10 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   private final RemoteClient remoteClient;
   private final CollectionMeta metaData;
 
-  RemoteCollection(RemoteCollection parent, RemoteClient remoteClient, String collectionName)
-      throws XMLDBException {
+  RemoteCollection(RemoteCollection parent, RemoteClient remoteClient, CollectionMeta metaData) {
     this.parent = parent;
     this.remoteClient = remoteClient;
-    this.metaData = remoteClient.collection(collectionName);
+    this.metaData = metaData;
     LOGGER.info("Created collection {}", this);
   }
 
@@ -54,27 +59,34 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public int getChildCollectionCount() throws XMLDBException {
-    return 0;
+    return Math.toIntExact(remoteClient.collectionCount(metaData.getCollectionId()).getCount());
   }
 
   @Override
   public List<String> listChildCollections() throws XMLDBException {
-    return null;
+    return StreamSupport
+        .stream(spliteratorUnknownSize(remoteClient.childCollections(metaData.getCollectionId()),
+            IMMUTABLE), false)
+        .map(ChildCollectionName::getChildName).toList();
   }
 
   @Override
   public Collection getChildCollection(String collectionName) throws XMLDBException {
-    return null;
+    return new RemoteCollection(this, remoteClient,
+        remoteClient.withStub(stub -> stub.openChildCollection(
+            ChildCollectionName.newBuilder().setChildName(collectionName).build())));
   }
 
   @Override
   public int getResourceCount() throws XMLDBException {
-    return 0;
+    return Math.toIntExact(remoteClient.resourceCount(metaData.getCollectionId()).getCount());
   }
 
   @Override
   public List<String> listResources() throws XMLDBException {
-    return null;
+    return StreamSupport.stream(
+        spliteratorUnknownSize(remoteClient.listResources(metaData.getCollectionId()), IMMUTABLE),
+        false).map(ResourceId::getResourceId).toList();
   }
 
   @Override
@@ -83,14 +95,10 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public void removeResource(Resource res) throws XMLDBException {
-
-  }
+  public void removeResource(Resource res) throws XMLDBException {}
 
   @Override
-  public void storeResource(Resource res) throws XMLDBException {
-
-  }
+  public void storeResource(Resource res) throws XMLDBException {}
 
   @Override
   public Resource getResource(String id) throws XMLDBException {
