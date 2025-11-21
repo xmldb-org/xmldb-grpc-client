@@ -40,7 +40,8 @@ class RemoteDatabaseRT {
   }
 
   static Stream<String> serverUrls() {
-    return Stream.of("xmldb:grpc://fenlx00001.main.corp.fenaco.com:9000/db");
-    // return Stream.of("xmldb:grpc://127.0.0.1:9000/db", "xmldb:grpc://[::1]:9000/db");
+    // return Stream.of("xmldb:grpc://fenlx00001.main.corp.fenaco.com:9000/db");
+    // return Stream.of("xmldb:grpc://127.0.0.1:8080/db", "xmldb:grpc://[::1]:8080/db");
+    return Stream.of("xmldb:grpc://localhost:8080/db");
   }
 }

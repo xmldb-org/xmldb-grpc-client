@@ -35,19 +35,14 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
 
   @Override
   public Collection getCollection(String uri, Properties info) throws XMLDBException {
-    ConnectionInfo connectionInfo = null;
     try {
-      connectionInfo = parseConnectionInfo(uri, info);
+      final var connectionInfo = parseConnectionInfo(uri, info);
+      if (connectionInfo != null) {
+        return new RemoteCollection(null, RemoteClient.create(connectionInfo),
+            connectionInfo.dbPath());
+      }
     } catch (RuntimeException e) {
       LOGGER.error("Error getting collection for URI {}", uri, e);
-    }
-    if (connectionInfo != null) {
-      final var channel = connectionInfo.openChannel();
-      final var credentials = new AuthenticationCredentials(connectionInfo::authentication);
-      final var remoteClient = new RemoteClient(channel, credentials);
-      remoteClient.systemInfo();
-      channel.shutdownNow();
-      return new RemoteCollection(null, remoteClient);
     }
     return null;
   }

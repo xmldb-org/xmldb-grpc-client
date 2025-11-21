@@ -9,18 +9,33 @@
 
 package org.xmldb.remote.client;
 
+import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.grpc.CollectionMeta;
 
+@MockitoSettings
 class RemoteDatabaseTest {
-  RemoteDatabase db = new RemoteDatabase();
+  @Mock
+  RemoteClient remoteClient;
+  @Mock
+  MockedStatic<RemoteClient> remoteClientMock;
+  @InjectMocks
+  RemoteDatabase db;
 
   @Test
   void getConformanceLevel() throws XMLDBException {
@@ -53,6 +68,9 @@ class RemoteDatabaseTest {
       xmldb:grpc://127.0.0.1:9000/db, johnDoe, mySecret
       """)
   void getCollection(String uri, String user, String secret) throws XMLDBException {
+    remoteClientMock.when(() -> RemoteClient.create(any())).thenReturn(remoteClient);
+    when(remoteClient.collection("/db")).thenReturn(CollectionMeta.newBuilder().build());
+
     var collection = db.getCollection(uri, properties(user, secret));
     assertThat(collection).isNotNull();
     assertThatNoException().isThrownBy(collection::close);

@@ -47,6 +47,7 @@ repositories {
 dependencies {
   implementation 'ch.qos.logback:logback-classic:1.5.21'
   implementation 'com.google.protobuf:protobuf-javalite:4.33.1'
+//  implementation 'com.google.protobuf:protobuf-java:4.33.1'
   implementation 'io.grpc:grpc-stub:1.77.0'
   implementation 'io.grpc:grpc-protobuf:1.77.0'
   implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
@@ -75,6 +76,14 @@ jar {
   manifest.attributes 'Implementation-Title': 'XML:DB API specification',
                       'Specification-Title': 'XML:DB API specification',
                       'Automatic-Module-Name': "org.xmldb.remote"
+}
+
+spotless {
+    java {
+        eclipse().configFile('gradle/xmldb-remote-style.xml')
+        importOrderFile('gradle/xmldb-remote.importorder')
+        replace('generated', '@javax.annotation.Generated', '@jakarta.annotation.Generated')
+    }
 }
 
 protobuf {
@@ -119,24 +128,24 @@ tasks.withType(com.diffplug.gradle.spotless.SpotlessTask).configureEach {
   mustRunAfter 'generateProto'
 }
 
-spotless {
-  java {
-    eclipse().configFile('gradle/xmldb-remote-style.xml')
-    importOrderFile('gradle/xmldb-remote.importorder')
-    replace('generated', '@javax.annotation.Generated', '@jakarta.annotation.Generated')
-  }
+tasks.withType(Test).configureEach {
+    testLogging {
+        events 'skipped'
+    }
+}
+tasks.named('test') {
+    useJUnitPlatform {
+        excludeTags 'remote'
+    }
 }
 
-test {
-  useJUnitPlatform {
-    excludeTags 'remote'
-    includeEngines 'junit-jupiter'
-  }
-  include '**/*Test.class'
-  include '**/*RT.class'
-  testLogging {
-    events 'skipped'
-  }
+tasks.register('testRemote', Test) {
+    group = 'verification'
+    description = 'Runs all live remote tests'
+    useJUnitPlatform {
+        includeTags 'remote'
+    }
+    include '**/*RT.class'
 }
 
 config {

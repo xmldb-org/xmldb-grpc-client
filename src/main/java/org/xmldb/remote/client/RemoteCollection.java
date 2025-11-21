@@ -19,23 +19,32 @@ import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.Service;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.grpc.CollectionMeta;
 
 public class RemoteCollection extends RemoteConfigurable implements Collection {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteCollection.class);
 
   private final RemoteCollection parent;
   private final RemoteClient remoteClient;
+  private final CollectionMeta metaData;
 
-  RemoteCollection(RemoteCollection parent, RemoteClient remoteClient) {
+  RemoteCollection(RemoteCollection parent, RemoteClient remoteClient, String collectionName)
+      throws XMLDBException {
     this.parent = parent;
     this.remoteClient = remoteClient;
+    this.metaData = remoteClient.collection(collectionName);
     LOGGER.info("Created collection {}", this);
   }
 
   @Override
   public String getName() throws XMLDBException {
     LOGGER.info("getName() with {}", remoteClient);
-    return null;
+    return metaData.getName();
+  }
+
+  @Override
+  public Instant getCreationTime() throws XMLDBException {
+    return Instant.ofEpochMilli(metaData.getCreationTime());
   }
 
   @Override
@@ -101,11 +110,6 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public void close() throws XMLDBException {
     LOGGER.debug("close()");
-  }
-
-  @Override
-  public Instant getCreationTime() throws XMLDBException {
-    return null;
   }
 
   @Override

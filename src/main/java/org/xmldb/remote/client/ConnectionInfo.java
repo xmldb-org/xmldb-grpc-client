@@ -19,12 +19,12 @@ import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 
-record ConnectionInfo(String host, int port, String dbPath, Properties info) {
+public record ConnectionInfo(String host, int port, String dbPath, Properties info) {
   String authentication() {
-    var username = info.getProperty("username", "");
+    var username = info.getProperty("user", "");
     var password = info.getProperty("password", "");
     var authentication = "%s:%s".formatted(username, password);
-    return Base64.getEncoder().encodeToString(authentication.getBytes(UTF_8));
+    return "Basic %s".formatted(Base64.getEncoder().encodeToString(authentication.getBytes(UTF_8)));
   }
 
   ManagedChannel openChannel() {

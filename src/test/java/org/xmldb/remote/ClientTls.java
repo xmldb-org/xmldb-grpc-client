@@ -21,11 +21,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.File;
 import java.util.Base64;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmldb.remote.client.AuthenticationCredentials;
+import org.xmldb.remote.client.ConnectionInfo;
 import org.xmldb.remote.client.RemoteClient;
 
 import io.grpc.ChannelCredentials;
@@ -76,9 +78,10 @@ public class ClientTls {
           /* Only for using provided test certs. */
           .overrideAuthority("foo.test.google.fr").build();
       try {
-        String authentication = Base64.getEncoder().encodeToString("guest:guest".getBytes(UTF_8));
-        RemoteClient client =
-            new RemoteClient(channel, new AuthenticationCredentials(() -> authentication));
+        Properties info = new Properties();
+        info.setProperty("user", "guest");
+        info.setProperty("password", "guest");
+        RemoteClient client = RemoteClient.create(new ConnectionInfo(host, port, "/", info));
         client.systemInfo();
       } finally {
         channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
