@@ -6,24 +6,16 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
  */
+package org.xmldb.remote.client;
 
-plugins {
-  id 'org.ajoberstar.reckon.settings' version '1.0.1'
-}
+import java.time.Instant;
 
-reckon {
-  defaultInferredScope = 'minor'
-  snapshots()
-  scopeCalc = calcScopeFromProp()
-  stageCalc = calcStageFromProp()
-}
+import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.modules.BinaryResource;
 
-rootProject.name = 'xmldb-remote'
-
-def projectCandidates = ['../xmldb-api']
-for (projectCandidate in projectCandidates) {
-    def project = new File(rootDir, projectCandidate)
-    if (project.isDirectory()) {
-        includeBuild project
-    }
+public class RemoteBinaryResource extends RemoteBaseResource implements BinaryResource {
+  public RemoteBinaryResource(String id, ResourceMeta resourceMeta,
+      RemoteCollection parentCollection) {
+    super(id, resourceMeta, parentCollection);
+  }
 }

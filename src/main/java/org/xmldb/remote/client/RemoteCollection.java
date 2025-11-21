@@ -11,10 +11,12 @@ package org.xmldb.remote.client;
 
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterators.spliteratorUnknownSize;
+import static org.xmldb.api.base.ErrorCodes.INVALID_RESOURCE;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
@@ -25,11 +27,17 @@ import org.xmldb.api.base.Service;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
+import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceId;
+import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.grpc.ResourceType;
+import org.xmldb.api.modules.BinaryResource;
+import org.xmldb.api.modules.XMLResource;
 
 public class RemoteCollection extends RemoteConfigurable implements Collection {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteCollection.class);
 
+  private final AtomicBoolean open;
   private final RemoteCollection parent;
   private final RemoteClient remoteClient;
   private final CollectionMeta metaData;
@@ -38,6 +46,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
     this.parent = parent;
     this.remoteClient = remoteClient;
     this.metaData = metaData;
+    open = new AtomicBoolean(true);
     LOGGER.info("Created collection {}", this);
   }
 
@@ -73,8 +82,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public Collection getChildCollection(String collectionName) throws XMLDBException {
     return new RemoteCollection(this, remoteClient,
-        remoteClient.withStub(stub -> stub.openChildCollection(
-            ChildCollectionName.newBuilder().setChildName(collectionName).build())));
+        remoteClient.openChildCollection(metaData.getCollectionId(), collectionName));
   }
 
   @Override
@@ -91,7 +99,28 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public <R extends Resource> R createResource(String id, Class<R> type) throws XMLDBException {
-    return null;
+    if (BinaryResource.class.equals(type)) {
+      return type.cast(new RemoteBinaryResource(id, createResourceMeta(ResourceType.BINARY), this));
+    } else if (XMLResource.class.equals(type)) {
+      return type.cast(new RemoteXMLResource(id, createResourceMeta(ResourceType.XML), this));
+    }
+    throw new XMLDBException(INVALID_RESOURCE);
+  }
+
+  private ResourceMeta createResourceMeta(ResourceType resourceType) {
+    long now = System.currentTimeMillis();
+    return ResourceMeta.newBuilder().setResourceId(HandleId.getDefaultInstance())
+        .setType(resourceType).setCreationTime(now).setLastModificationTime(now).build();
+  }
+
+  @Override
+  public Resource getResource(String id) throws XMLDBException {
+    final ResourceMeta resourceMeta = remoteClient.resource(metaData.getCollectionId(), id);
+    return switch (resourceMeta.getType()) {
+      case XML -> new RemoteXMLResource(id, resourceMeta, this);
+      case BINARY -> new RemoteBinaryResource(id, resourceMeta, this);
+      case UNRECOGNIZED -> throw new XMLDBException(INVALID_RESOURCE);
+    };
   }
 
   @Override
@@ -100,10 +129,6 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public void storeResource(Resource res) throws XMLDBException {}
 
-  @Override
-  public Resource getResource(String id) throws XMLDBException {
-    return null;
-  }
 
   @Override
   public String createId() throws XMLDBException {
@@ -112,12 +137,14 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public boolean isOpen() throws XMLDBException {
-    return false;
+    return open.get();
   }
 
   @Override
   public void close() throws XMLDBException {
-    LOGGER.debug("close()");
+    if (open.compareAndSet(true, false)) {
+      remoteClient.closeCollection(metaData.getCollectionId());
+    }
   }
 
   @Override

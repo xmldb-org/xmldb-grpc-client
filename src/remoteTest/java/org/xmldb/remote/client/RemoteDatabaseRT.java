@@ -11,6 +11,7 @@ package org.xmldb.remote.client;
 
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 import java.util.stream.Stream;
 
@@ -36,22 +37,32 @@ class RemoteDatabaseRT {
         .satisfies(RemoteDatabaseRT::assertCollection);
   }
 
-  private static void assertCollection(Collection collection) throws XMLDBException {
-    assertThat(collection.getResourceCount()).isEqualTo(2);
-    assertThat(collection.listResources()).containsExactlyInAnyOrder("test1.xml", "test2.xml");
+  static void assertCollection(Collection collection) throws XMLDBException {
+    assertResources(collection, "test1.xml", "test2.xml");
     assertThat(collection.getChildCollectionCount()).isEqualTo(1);
     assertThat(collection.listChildCollections()).containsExactlyInAnyOrder("child");
     assertThat(collection.getChildCollection("child")).isNotNull().satisfies(childCol -> {
-      assertThat(childCol.getResourceCount()).isEqualTo(1);
-      assertThat(childCol.listResources()).containsExactlyInAnyOrder("test3.xml");
+      assertResources(childCol, "test3.xml");
       assertThat(childCol.getChildCollectionCount()).isZero();
       assertThat(childCol.listChildCollections()).isEmpty();
+      assertThatNoException().isThrownBy(childCol::close);
     });
+    assertThatNoException().isThrownBy(collection::close);
+  }
+
+  static void assertResources(Collection collection, String... expectedResourcesIds)
+      throws XMLDBException {
+    assertThat(collection.getResourceCount()).isEqualTo(expectedResourcesIds.length);
+    assertThat(collection.listResources()).containsExactlyInAnyOrder(expectedResourcesIds);
+    for (String expectedResourcesId : expectedResourcesIds) {
+      assertThat(collection.getResource(expectedResourcesId)).isNotNull().satisfies(res -> {
+        assertThat(res.getId()).isEqualTo(expectedResourcesId);
+      });
+    }
   }
 
   static Stream<String> serverUrls() {
-    // return Stream.of("xmldb:grpc://fenlx00001.main.corp.fenaco.com:9000/db");
     // return Stream.of("xmldb:grpc://127.0.0.1:8080/db", "xmldb:grpc://[::1]:8080/db");
-    return Stream.of("xmldb:grpc://localhost:8080/db");
+    return Stream.of("xmldb:grpc://127.0.0.1:8080/db");
   }
 }
