@@ -19,6 +19,12 @@
         "major"
       ],
       "automerge": false
+    },
+    {
+      "matchDepNames": [
+        "com.google.protobuf:protoc"
+      ],
+      "allowedVersions": "<4.0.0"
     }
   ],
   "schedule": [
