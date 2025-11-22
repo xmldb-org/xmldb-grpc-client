@@ -8,14 +8,27 @@
  */
 package org.xmldb.remote.client;
 
+import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
+
 import java.time.Instant;
 
+import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.modules.BinaryResource;
 
-public class RemoteBinaryResource extends RemoteBaseResource implements BinaryResource {
+public class RemoteBinaryResource extends RemoteBaseResource<byte[]> implements BinaryResource {
   public RemoteBinaryResource(String id, ResourceMeta resourceMeta,
       RemoteCollection parentCollection) {
     super(id, resourceMeta, parentCollection);
+  }
+
+  @Override
+  public byte[] getContent() throws XMLDBException {
+    throw new XMLDBException(NOT_IMPLEMENTED);
+  }
+
+  @Override
+  public void setContent(byte[] value) throws XMLDBException {
+    throw new XMLDBException(NOT_IMPLEMENTED);
   }
 }

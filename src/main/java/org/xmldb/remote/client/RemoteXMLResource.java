@@ -21,10 +21,20 @@ import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.modules.XMLResource;
 
-public class RemoteXMLResource extends RemoteBaseResource implements XMLResource {
+public class RemoteXMLResource extends RemoteBaseResource<String> implements XMLResource {
   public RemoteXMLResource(String id, ResourceMeta resourceMeta,
       RemoteCollection parentCollection) {
     super(id, resourceMeta, parentCollection);
+  }
+
+  @Override
+  public String getContent() throws XMLDBException {
+    throw new XMLDBException(NOT_IMPLEMENTED);
+  }
+
+  @Override
+  public void setContent(String value) throws XMLDBException {
+    throw new XMLDBException(NOT_IMPLEMENTED);
   }
 
   @Override

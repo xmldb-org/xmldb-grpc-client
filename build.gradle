@@ -11,25 +11,94 @@ plugins {
   id 'eclipse'
   id 'idea'
   id 'java-library'
-  id 'java-test-fixtures'
+  id 'maven-publish'
+  id 'signing'
   id 'com.diffplug.spotless' version '8.1.0'
   id 'com.google.protobuf' version '0.9.5'
-  id 'org.kordamp.gradle.java-project' version '0.54.0'
 }
-
-apply {
-  plugin 'org.kordamp.gradle.checkstyle'
-  plugin 'org.kordamp.gradle.errorprone'
-  plugin 'org.kordamp.gradle.sonar'
-}
-
-if (!project.hasProperty('sonatypeUsername')) ext.sonatypeUsername = '**undefined**'
-if (!project.hasProperty('sonatypePassword')) ext.sonatypePassword = '**undefined**'
-if (!project.hasProperty('sonarToken')) ext.sonarToken = '**undefined**'
 
 group = 'net.sf.xmldb-org'
 
-defaultTasks 'build'
+allprojects {
+  apply {
+    plugin 'java-library'
+    plugin 'maven-publish'
+    plugin 'signing'
+  }
+
+  repositories {
+    mavenCentral()
+    maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
+  }
+
+  jar {
+    manifest.attributes 'Implementation-Title': 'XML:DB API specification',
+            'Specification-Title': 'XML:DB API specification',
+            'Automatic-Module-Name': "org.xmldb.grpc.client"
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = 'OSSRH'
+        def releasesRepoUrl = 'https://ossrh-staging-api.central.sonatype.com/service/local/'
+        def snapshotsRepoUrl = 'https://central.sonatype.com/repository/maven-snapshots/'
+        url = version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+        credentials {
+          username = findProperty('sonatypeUsername') ?: System.getenv('OSSRH_USERNAME')
+          password = findProperty('sonatypePassword') ?: System.getenv('OSSRH_PASSWORD')
+        }
+      }
+    }
+    publications {
+      mavenJava(MavenPublication) {
+        from components.java
+
+        pom {
+          name = 'XML:DB gRPC client'
+          url = 'https://github.com/xmldb-org'
+          description = 'XML:DB gRPC client implementation'
+
+          licenses {
+            license {
+              name = 'The Apache License, Version 2.0'
+              url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+          }
+
+          developers {
+            developer {
+              id = 'reinhapa'
+              name = 'Patrick Reinhart'
+              email = 'patrick@reini.net'
+            }
+            developer {
+              id = 'ohumbel'
+              name = 'Otmar Humbel'
+              email = 'per_nyfelt@users.sf.net'
+            }
+          }
+          scm {
+            connection = 'scm:git:git://github.com/xmldb-org/xmldb-grpc-client.git'
+            developerConnection = 'scm:git:ssh://github.com/xmldb-org/xmldb-grpc-client.git'
+            url = 'https://github.com/xmldb-org/xmldb-grpc-client'
+          }
+        }
+      }
+    }
+  }
+  signing {
+    required = !version.toString().endsWith('SNAPSHOT') && gradle.taskGraph.hasTask("publish")
+    sign publishing.publications.mavenJava
+  }
+
+  normalization {
+    runtimeClasspath {
+      ignore '/META-INF/MANIFEST.MF'
+    }
+  }
+}
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
@@ -39,11 +108,6 @@ sourceSets.test {
   java { srcDir 'src/remoteTest/java' }
 }
 
-repositories {
-  mavenCentral()
-  maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
-}
-
 dependencies {
   implementation 'ch.qos.logback:logback-classic:1.5.21'
   implementation 'com.google.protobuf:protobuf-javalite:4.33.1'
@@ -51,7 +115,7 @@ dependencies {
   implementation 'io.grpc:grpc-stub:1.77.0'
   implementation 'io.grpc:grpc-protobuf:1.77.0'
   implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
-  implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-protobuf-SNAPSHOT'
+  implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
 
   // used for server / client
   implementation 'io.grpc:grpc-netty-shaded:1.77.0'
@@ -65,17 +129,11 @@ dependencies {
   testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.14.1'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.1'
 
-  protobuf 'net.sf.xmldb-org:xmldb-api:3.0.0-protobuf-SNAPSHOT'
+  protobuf project(':xmldb-grpc-api')
 }
 
 compileJava {
   options.compilerArgs << '-Xlint:unchecked'
-}
-
-jar {
-  manifest.attributes 'Implementation-Title': 'XML:DB API specification',
-                      'Specification-Title': 'XML:DB API specification',
-                      'Automatic-Module-Name': "org.xmldb.remote"
 }
 
 spotless {
@@ -120,10 +178,6 @@ tasks.withType(JavaCompile).configureEach {
   dependsOn 'spotlessJavaApply'
 }
 
-tasks.withType(nl.javadude.gradle.plugins.license.License).configureEach {
-  dependsOn 'generateProto'
-}
-
 tasks.withType(com.diffplug.gradle.spotless.SpotlessTask).configureEach {
   mustRunAfter 'generateProto'
 }
@@ -146,104 +200,4 @@ tasks.register('testRemote', Test) {
         includeTags 'remote'
     }
     include '**/*RT.class'
-}
-
-config {
-  release = !project.version.toString().endsWith('-SNAPSHOT')
-  info {
-    vendor = 'reinhapa'
-    name = 'XML:DB Proto buffers remote client'
-    description = 'XML:DB Initiative for XML Databases'
-    inceptionYear = '2023'
-    links {
-      website = 'https://github.com/xmldb-org/xmldb-remote'
-      issueTracker = 'https://github.com/xmldb-org/xmldb-remote/issues'
-      scm = 'https://github.com/xmldb-org/xmldb-remote.git'
-    }
-    scm {
-      connection = 'scm:git://github.com/xmldb-org/xmldb-remote.git'
-      developerConnection = 'scm:git://github.com/xmldb-org/xmldb-remote.git'
-      url = 'https://github.com/xmldb-org/xmldb-remote'
-    }
-    organization {
-      name = 'XML:DB Initiative for XML Databases'
-      url = 'https://github.com/xmldb-org'
-    }
-    people {
-      person {
-        id = 'xmldb-remote'
-        name = 'XML:DB Initiative'
-        roles = [ 'owner' ]
-      }
-      person {
-        id = 'reinhapa'
-        name = 'Patrick Reinhart'
-        email = 'patrick@reini.net'
-        roles = [ 'developer' ]
-      }
-    }
-    repositories {
-      repository {
-        name = 'sonatypeRelease'
-        url  = 'https://ossrh-staging-api.central.sonatype.com/service/local/'
-        credentials {
-          username = sonatypeUsername
-          password = sonatypePassword
-        }
-      }
-      repository {
-        name = 'sonatypeSnapshot'
-        url  = 'https://central.sonatype.com/repository/maven-snapshots/'
-        credentials {
-          username = sonatypeUsername
-          password = sonatypePassword
-        }
-      }
-    }
-  }
-  quality {
-    errorprone {
-      errorProneVersion = '2.28.0'
-      excludedPaths = '.*/generated/source/proto/.*'
-    }
-    sonar {
-      hostUrl = 'https://sonarcloud.io'
-      login = sonarToken
-      organization = 'xmldb-org'
-      projectKey = 'xmldb-org_xmldb-remote'
-    }
-  }
-  licensing {
-    excludes = [ 'org/xmldb/api/grpc/**' ]
-    licenses {
-      license {
-        name = 'The XML:DB Initiative Software License'
-        url = 'https://github.com/xmldb-org/xmldb-remote/raw/master/LICENSE'
-      }
-    }
-  }
-  docs {
-    javadoc {
-      autoLinks.enabled = false
-      options {
-        docTitle = "XML:DB ${project.version} grpc remote client"
-        header = "XML:DB ${project.version} grpc remote client"
-        windowTitle = "XML:DB ${project.version} grpc remote client"
-      }
-    }
-  }
-  artifacts {
-    minpom.enabled = false
-  }
-  publishing {
-    signing.enabled = release
-    releasesRepository  = 'sonatypeRelease'
-    snapshotsRepository = 'sonatypeSnapshot'
-  }
-}
-
-normalization {
-  runtimeClasspath {
-    ignore '/META-INF/MANIFEST.MF'
-  }
 }
