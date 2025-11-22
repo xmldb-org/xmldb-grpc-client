@@ -1,10 +1,10 @@
-= XML:DB Initiative for XML Databases
+= XML:DB API gRPC client implementation
 Patrick Reinhart <https://github.com/reinhapa[@reinhapa]>
 :group-name: net.sf.xmldb-org
 :project-org: xmldb-org
-:project-name: xmldb-remote
+:project-name: xmldb-grpc-client
 :project-full-path: {project-org}/{project-name}
-:github-branch: master
+:github-branch: main
 :java-version: 21
 
 image:https://img.shields.io/badge/license-XML:DB-blue.svg["Apache License Software License", link="https://github.com/{project-full-path}/blob/{github-branch}/LICENSE"]
@@ -14,19 +14,27 @@ image:https://sonarcloud.io/api/project_badges/measure?project={project-org}_{pr
 image:https://javadoc.io/badge2/{group-name}/{project-name}/javadoc.svg["javadoc", link="https://javadoc.io/doc/{group-name}/{project-name}"]
 image:https://github.com/{project-full-path}/actions/workflows/gradle.yml/badge.svg["CI", link="https://github.com/{project-full-path}/actions/workflows/gradle.yml"]
 
-
-Supported Java versions: 
+Supported Java versions:
 image:https://img.shields.io/badge/Java-{java-version}-blue.svg["Java {java-version}", link="https://adoptium.net/"]
 
-== Content
-The API interfaces are what driver developers must implement when creating a
-new driver and are the interfaces that applications are developed against.
-Along with the interfaces a concrete DriverManager implementation is also
-provides.
+== Overview
+This project provides a gRPC client implementation for the XML:DB API, enabling remote access to XML databases through
+a standardized interface. It leverages modern gRPC technology for efficient client-server communication and Protocol
+Buffers for data serialization.
 
+== Features
+* Implementation of XML:DB API for remote database access
+* gRPC-based communication protocol
+* Protocol Buffers for efficient data serialization
+
+== Technical Stack
+* Java {java-version}
+* gRPC and Protocol Buffers
+* Logback for logging
+* JUnit 5 for testing
 
 == Building
-The XML:DB Remote access code can be built as a JAR file and it is based on 
+The XML:DB Remote access code can be built as a JAR file and it is based on
 the XML:DB API definition.
 
 Java {java-version} or later is required to build the JAR file.
@@ -40,14 +48,44 @@ $ gradlew build
 
 The JAR file will be located in the `build/libs` folder.
 
+== Running Tests
+=== Standard Tests
+[source,bash]
+----
+$ gradlew test
+----
 
-== Getting the binaries for your build:
+=== Remote Tests
+In order to execute this tests you will need to have a running backend providing the required collections and resources.
+At the moment the https://github.com/{project-org}/xmldb-grpc-server-mock[xmldb-grpc-server-mock] project provides
+such an implementation
+
+[source,bash]
+----
+$ gradlew testRemote
+----
+
+== Getting the binaries for your build
 The latest versions of the API are available at https://search.maven.org/search?q=g:{group-name}
 
+[source,xml]
+----
+<dependency>
+  <groupId>{group-name}</groupId>
+  <artifactId>{project-name}</artifactId>
+  <version>[latest-version]</version>
+</dependency>
+----
 
 == Contribute
-Contributions are always welcome. Use https://google.github.io/styleguide/javaguide.html[Google code style format] for your changes. 
+Contributions are always welcome. Use https://google.github.io/styleguide/javaguide.html[Google code style format] for your changes.
 
+=== Development Workflow
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes following the Google code style format
+4. Run tests to ensure everything works as expected
+5. Submit a pull request
 
 == License
 This project is licensed under the https://github.com/{project-full-path}/blob/{github-branch}/LICENSE[Apache License Software License]
