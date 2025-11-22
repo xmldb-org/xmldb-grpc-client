@@ -19,6 +19,5 @@ reckon {
 }
 
 rootProject.name = 'xmldb-grpc-client'
-include 'xmldb-grpc-api'
 
 //includeBuild('../xmldb-api')
