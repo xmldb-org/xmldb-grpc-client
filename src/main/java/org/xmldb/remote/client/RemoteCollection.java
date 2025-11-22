@@ -98,7 +98,8 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public <R extends Resource> R createResource(String id, Class<R> type) throws XMLDBException {
+  public <T, R extends Resource<T>> R createResource(String id, Class<R> type)
+      throws XMLDBException {
     if (BinaryResource.class.equals(type)) {
       return type.cast(new RemoteBinaryResource(id, createResourceMeta(ResourceType.BINARY), this));
     } else if (XMLResource.class.equals(type)) {
@@ -124,10 +125,10 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public void removeResource(Resource res) throws XMLDBException {}
+  public void removeResource(Resource<?> res) throws XMLDBException {}
 
   @Override
-  public void storeResource(Resource res) throws XMLDBException {}
+  public void storeResource(Resource<?> res) throws XMLDBException {}
 
 
   @Override

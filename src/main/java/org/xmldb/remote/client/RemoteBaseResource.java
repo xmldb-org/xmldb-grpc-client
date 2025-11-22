@@ -18,7 +18,7 @@ import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 
-public abstract class RemoteBaseResource implements Resource {
+public abstract class RemoteBaseResource<R> implements Resource<R> {
   private final String id;
   private final ResourceMeta resourceMeta;
   private final RemoteCollection parentCollection;
@@ -43,17 +43,7 @@ public abstract class RemoteBaseResource implements Resource {
   }
 
   @Override
-  public Object getContent() throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
-  }
-
-  @Override
   public void getContentAsStream(OutputStream stream) throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
-  }
-
-  @Override
-  public void setContent(Object value) throws XMLDBException {
     throw new XMLDBException(NOT_IMPLEMENTED);
   }
 

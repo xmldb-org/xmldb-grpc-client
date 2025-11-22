@@ -7,18 +7,6 @@
  * language governing permissions and limitations under the License.
  */
 
-plugins {
-  id 'org.ajoberstar.reckon.settings' version '1.0.1'
+sourceSets.main {
+    resources { srcDir 'src/main/proto' }
 }
-
-reckon {
-  defaultInferredScope = 'minor'
-  snapshots()
-  scopeCalc = calcScopeFromProp()
-  stageCalc = calcStageFromProp()
-}
-
-rootProject.name = 'xmldb-grpc-client'
-include 'xmldb-grpc-api'
-
-//includeBuild('../xmldb-api')
