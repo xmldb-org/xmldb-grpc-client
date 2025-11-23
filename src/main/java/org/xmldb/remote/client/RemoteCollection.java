@@ -50,6 +50,22 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
     LOGGER.info("Created collection {}", this);
   }
 
+  interface RemoteClientConsumer {
+    void accept(RemoteClient remoteClient) throws XMLDBException;
+  }
+
+  interface RemoteClientFunction<T> {
+    T accept(RemoteClient remoteClient) throws XMLDBException;
+  }
+
+  void call(RemoteClientConsumer action) throws XMLDBException {
+    action.accept(remoteClient);
+  }
+
+  <T> T execute(RemoteClientFunction<T> function) throws XMLDBException {
+    return function.accept(remoteClient);
+  }
+
   @Override
   public String getName() throws XMLDBException {
     LOGGER.info("getName() with {}", remoteClient);
@@ -116,7 +132,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public Resource getResource(String id) throws XMLDBException {
-    final ResourceMeta resourceMeta = remoteClient.resource(metaData.getCollectionId(), id);
+    final ResourceMeta resourceMeta = remoteClient.openResource(metaData.getCollectionId(), id);
     return switch (resourceMeta.getType()) {
       case XML -> new RemoteXMLResource(id, resourceMeta, this);
       case BINARY -> new RemoteBinaryResource(id, resourceMeta, this);

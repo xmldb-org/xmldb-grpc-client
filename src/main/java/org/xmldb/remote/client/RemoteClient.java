@@ -18,7 +18,6 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmldb.api.base.ErrorCodes;
-import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
@@ -124,8 +123,13 @@ public final class RemoteClient {
     withStub(stub -> stub.closeCollection(collectionHandle));
   }
 
-  public ResourceMeta resource(HandleId collectionHandle, String resourceId) throws XMLDBException {
-    return withStub(stub -> stub.resource(ResourceId.newBuilder().setCollectionId(collectionHandle)
-        .setResourceId(resourceId).build()));
+  public ResourceMeta openResource(HandleId collectionHandle, String resourceId)
+      throws XMLDBException {
+    return withStub(stub -> stub.openResource(ResourceId.newBuilder()
+        .setCollectionId(collectionHandle).setResourceId(resourceId).build()));
+  }
+
+  public void closeResource(HandleId resourceHandle) throws XMLDBException {
+    withStub(stub -> stub.closeResource(resourceHandle));
   }
 }

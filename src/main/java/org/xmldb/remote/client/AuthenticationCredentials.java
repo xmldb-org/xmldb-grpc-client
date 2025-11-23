@@ -20,6 +20,11 @@ import org.slf4j.LoggerFactory;
 import io.grpc.CallCredentials;
 import io.grpc.Metadata;
 
+/**
+ * The {@code AuthenticationCredentials} class is a concrete implementation of
+ * {@code CallCredentials}. It is used to apply authentication metadata to gRPC requests. This class
+ * primarily works with a supplier to fetch authentication tokens dynamically for each request.
+ */
 public final class AuthenticationCredentials extends CallCredentials {
   private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationCredentials.class);
   private static final Metadata.Key<String> AUTHENTICATION =
@@ -27,6 +32,13 @@ public final class AuthenticationCredentials extends CallCredentials {
 
   private final Supplier<String> authenticationSupplier;
 
+  /**
+   * Constructs an instance of {@code AuthenticationCredentials} using the provided supplier for
+   * dynamically retrieving authentication tokens.
+   *
+   * @param authenticationSupplier a supplier that provides authentication tokens to be used for
+   *        gRPC request authorization
+   */
   public AuthenticationCredentials(final Supplier<String> authenticationSupplier) {
     this.authenticationSupplier = authenticationSupplier;
   }

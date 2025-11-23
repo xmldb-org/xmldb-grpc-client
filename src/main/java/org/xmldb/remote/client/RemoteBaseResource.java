@@ -12,6 +12,7 @@ import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 
 import java.io.OutputStream;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
@@ -20,14 +21,15 @@ import org.xmldb.api.grpc.ResourceMeta;
 
 public abstract class RemoteBaseResource<R> implements Resource<R> {
   private final String id;
+  private final AtomicBoolean open;
   private final ResourceMeta resourceMeta;
   private final RemoteCollection parentCollection;
 
-  private boolean closed;
 
   protected RemoteBaseResource(String id, ResourceMeta resourceMeta,
       RemoteCollection parentCollection) {
     this.id = id;
+    this.open = new AtomicBoolean(true);
     this.resourceMeta = resourceMeta;
     this.parentCollection = parentCollection;
   }
@@ -49,12 +51,15 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
 
   @Override
   public boolean isClosed() {
-    return closed;
+    return !open.get();
   }
 
   @Override
-  public void close() {
-    closed = true;
+  public void close() throws XMLDBException {
+    if (open.compareAndSet(true, false)) {
+      parentCollection
+          .call(remoteClient -> remoteClient.closeResource(resourceMeta.getResourceId()));
+    }
   }
 
   @Override

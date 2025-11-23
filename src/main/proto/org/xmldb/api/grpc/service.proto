@@ -24,8 +24,10 @@ service XmlDbService {
   rpc listResources(HandleId) returns (stream ResourceId);
   // returns a collection name stream for the given handle id
   rpc childCollections(HandleId) returns (stream ChildCollectionName);
-  // returns a resource for the given document id
-  rpc resource(ResourceId) returns (ResourceMeta);
+  // open & retrieve a resource for the given document id
+  rpc openResource(ResourceId) returns (ResourceMeta);
+  // close and dispose a resource
+  rpc closeResource(HandleId) returns (Empty);
   // returns the resource data for the given handle
   rpc resourceData(HandleId) returns (stream Data);
 }

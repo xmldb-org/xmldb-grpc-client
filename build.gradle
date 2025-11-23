@@ -26,6 +26,8 @@ repositories {
 
 java {
   sourceCompatibility = JavaVersion.VERSION_21
+  withJavadocJar()
+  withSourcesJar()
 }
 
 sourceSets.test {
@@ -131,6 +133,10 @@ tasks.register('protobuf', Jar) {
 jar {
   manifest.attributes 'Implementation-Title': 'XML:DB gRPC client',
                       'Automatic-Module-Name': "org.xmldb.grpc.client"
+}
+
+javadoc {
+  excludes = ['org/xmldb/api/grpc/**']
 }
 
 publishing {
