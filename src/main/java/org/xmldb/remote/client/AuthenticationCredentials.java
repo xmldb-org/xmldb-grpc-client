@@ -45,7 +45,7 @@ public final class AuthenticationCredentials extends CallCredentials {
 
   private void applyAuthentication(final RequestInfo requestInfo,
       final MetadataApplier metadataApplier) {
-    LOGGER.info("applyRequestMetadata: {}", requestInfo);
+    LOGGER.debug("applyRequestMetadata: {}", requestInfo);
     final var metadata = new Metadata();
     metadata.put(AUTHENTICATION, authenticationSupplier.get());
     metadataApplier.apply(metadata);

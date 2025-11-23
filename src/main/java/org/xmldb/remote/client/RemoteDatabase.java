@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Database;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.grpc.CollectionMeta;
 
 public final class RemoteDatabase extends RemoteConfigurable implements Database {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDatabase.class);
@@ -38,8 +39,13 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
     try {
       final var connectionInfo = parseConnectionInfo(uri, info);
       if (connectionInfo != null) {
-        RemoteClient remoteClient = RemoteClient.create(connectionInfo);
-        return new RemoteCollection(null, remoteClient, remoteClient.openRootCollection(uri, info));
+        final RemoteClient remoteClient = RemoteClient.create(connectionInfo);
+        final CollectionMeta metaData = remoteClient.openRootCollection(uri, info);
+        if (metaData.getName().isEmpty()) {
+          LOGGER.warn("Collection for URI {} not found", uri);
+        } else {
+          return new RemoteCollection(null, remoteClient, metaData);
+        }
       }
     } catch (RuntimeException e) {
       LOGGER.error("Error getting collection for URI {}", uri, e);

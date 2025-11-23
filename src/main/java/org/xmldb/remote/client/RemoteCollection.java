@@ -47,7 +47,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
     this.remoteClient = remoteClient;
     this.metaData = metaData;
     open = new AtomicBoolean(true);
-    LOGGER.info("Created collection {}", this);
+    LOGGER.debug("Created remote collection {}", this);
   }
 
   interface RemoteClientConsumer {
@@ -68,27 +68,31 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public String getName() throws XMLDBException {
-    LOGGER.info("getName() with {}", remoteClient);
+    LOGGER.debug("getName()");
     return metaData.getName();
   }
 
   @Override
   public Instant getCreationTime() throws XMLDBException {
+    LOGGER.debug("getCreationTime()");
     return Instant.ofEpochMilli(metaData.getCreationTime());
   }
 
   @Override
   public Collection getParentCollection() throws XMLDBException {
+    LOGGER.debug("getParentCollection()");
     return parent;
   }
 
   @Override
   public int getChildCollectionCount() throws XMLDBException {
+    LOGGER.debug("getChildCollectionCount()");
     return Math.toIntExact(remoteClient.collectionCount(metaData.getCollectionId()).getCount());
   }
 
   @Override
   public List<String> listChildCollections() throws XMLDBException {
+    LOGGER.debug("listChildCollections()");
     return StreamSupport
         .stream(spliteratorUnknownSize(remoteClient.childCollections(metaData.getCollectionId()),
             IMMUTABLE), false)
@@ -96,18 +100,27 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public Collection getChildCollection(String collectionName) throws XMLDBException {
-    return new RemoteCollection(this, remoteClient,
-        remoteClient.openChildCollection(metaData.getCollectionId(), collectionName));
+  public Collection getChildCollection(String childCollectionName) throws XMLDBException {
+    LOGGER.debug("getChildCollection({})", childCollectionName);
+    final CollectionMeta collectionMeta =
+        remoteClient.openChildCollection(metaData.getCollectionId(), childCollectionName);
+    if (collectionMeta.getName().isEmpty()) {
+      LOGGER.warn("Child collection {} not found", childCollectionName);
+      return null;
+    } else {
+      return new RemoteCollection(this, remoteClient, collectionMeta);
+    }
   }
 
   @Override
   public int getResourceCount() throws XMLDBException {
+    LOGGER.debug("getResourceCount()");
     return Math.toIntExact(remoteClient.resourceCount(metaData.getCollectionId()).getCount());
   }
 
   @Override
   public List<String> listResources() throws XMLDBException {
+    LOGGER.debug("listResources()");
     return StreamSupport.stream(
         spliteratorUnknownSize(remoteClient.listResources(metaData.getCollectionId()), IMMUTABLE),
         false).map(ResourceId::getResourceId).toList();
@@ -116,6 +129,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public <T, R extends Resource<T>> R createResource(String id, Class<R> type)
       throws XMLDBException {
+    LOGGER.debug("createResource({}, {})", id, type);
     if (BinaryResource.class.equals(type)) {
       return type.cast(new RemoteBinaryResource(id, createResourceMeta(ResourceType.BINARY), this));
     } else if (XMLResource.class.equals(type)) {
@@ -131,7 +145,8 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public Resource getResource(String id) throws XMLDBException {
+  public Resource<?> getResource(String id) throws XMLDBException {
+    LOGGER.debug("getResource({})", id);
     final ResourceMeta resourceMeta = remoteClient.openResource(metaData.getCollectionId(), id);
     return switch (resourceMeta.getType()) {
       case XML -> new RemoteXMLResource(id, resourceMeta, this);
@@ -141,14 +156,18 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public void removeResource(Resource<?> res) throws XMLDBException {}
+  public void removeResource(Resource<?> res) throws XMLDBException {
+    LOGGER.warn("removeResource() with {}", res);
+  }
 
   @Override
-  public void storeResource(Resource<?> res) throws XMLDBException {}
-
+  public void storeResource(Resource<?> res) throws XMLDBException {
+    LOGGER.warn("storeResource() with {}", res);
+  }
 
   @Override
   public String createId() throws XMLDBException {
+    LOGGER.warn("createId()");
     return null;
   }
 
@@ -166,11 +185,18 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public <S extends Service> boolean hasService(Class<S> serviceType) {
+    LOGGER.warn("hasService({})", serviceType);
     return false;
   }
 
   @Override
   public <S extends Service> Optional<S> findService(Class<S> serviceType) {
+    LOGGER.warn("findService({})", serviceType);
     return Optional.empty();
+  }
+
+  @Override
+  public String toString() {
+    return "/%s".formatted(metaData.getName());
   }
 }

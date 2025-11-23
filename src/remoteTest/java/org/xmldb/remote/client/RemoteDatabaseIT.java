@@ -8,8 +8,6 @@
  */
 package org.xmldb.remote.client;
 
-
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
@@ -22,19 +20,26 @@ import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.XMLDBException;
 
 @RemoteTest
-class RemoteDatabaseRT {
+class RemoteDatabaseIT {
   @ParameterizedTest
   @MethodSource("serverUrls")
   void getCollection(String serverUrl) throws XMLDBException {
     assertThat(DatabaseManager.getCollection(serverUrl)).isNotNull()
-        .satisfies(RemoteDatabaseRT::assertCollection);
+        .satisfies(RemoteDatabaseIT::assertCollection);
   }
 
   @ParameterizedTest
   @MethodSource("serverUrls")
   void getCollectionWithCredentials(String serverUrl) throws XMLDBException {
     assertThat(DatabaseManager.getCollection(serverUrl, "guest", "guest")).isNotNull()
-        .satisfies(RemoteDatabaseRT::assertCollection);
+        .satisfies(RemoteDatabaseIT::assertCollection);
+  }
+
+  @ParameterizedTest
+  @MethodSource("serverUrls")
+  void getUnkownCollection(String serverUrl) throws XMLDBException {
+    assertThat(DatabaseManager.getCollection(serverUrl + "Blup")).isNull();
+    assertThat(DatabaseManager.getCollection(serverUrl).getChildCollection("Blup")).isNull();
   }
 
   static void assertCollection(Collection collection) throws XMLDBException {

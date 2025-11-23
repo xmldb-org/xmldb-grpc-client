@@ -50,9 +50,10 @@ dependencies {
   testImplementation 'org.mockito:mockito-core:5.20.0'
   testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
 
-  testRuntimeOnly 'org.mockito:mockito-core:5.20.0'
-  testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.14.1'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.1'
+  testRuntimeOnly 'org.junit.platform:junit-platform-engine:6.0.1'
+  testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.14.1'
+  testRuntimeOnly 'org.mockito:mockito-core:5.20.0'
 }
 
 compileJava {
@@ -60,17 +61,18 @@ compileJava {
 }
 
 spotless {
-    java {
-        eclipse().configFile('gradle/xmldb-remote-style.xml')
-        importOrderFile('gradle/xmldb-remote.importorder')
-        replace('generated', '@javax.annotation.Generated', '@jakarta.annotation.Generated')
-    }
+  java {
+    eclipse().configFile('gradle/xmldb-remote-style.xml')
+    importOrderFile('gradle/xmldb-remote.importorder')
+    replace('generated', '@javax.annotation.Generated', '@jakarta.annotation.Generated')
+  }
 }
 
 protobuf {
   protoc {
     // The artifact spec for the Protobuf Compiler
     artifact = 'com.google.protobuf:protoc:3.25.8'
+//    artifact = 'io.grpc:protoc-gen-grpc-java:1.77.0'
   }
   plugins {
     // Optional: an artifact spec for a protoc plugin, with "grpc" as
@@ -106,23 +108,29 @@ tasks.withType(com.diffplug.gradle.spotless.SpotlessTask).configureEach {
 }
 
 tasks.withType(Test).configureEach {
-    testLogging {
-        events 'skipped'
-    }
+  testLogging {
+    events 'skipped'
+  }
 }
+
 tasks.named('test') {
-    useJUnitPlatform {
-        excludeTags 'remote'
-    }
+  useJUnitPlatform {
+    excludeTags 'remote'
+  }
 }
 
 tasks.register('testRemote', Test) {
-    group = 'verification'
-    description = 'Runs all live remote tests'
-    useJUnitPlatform {
-        includeTags 'remote'
-    }
-    include '**/*RT.class'
+  group = 'verification'
+  description = 'Runs all live remote tests'
+
+  // Set source sets explicitly
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+
+  useJUnitPlatform {
+    includeTags 'remote'
+  }
+  include('**/*IT.class')
 }
 
 tasks.register('protobuf', Jar) {
