@@ -11,9 +11,10 @@ package org.xmldb.remote.client;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.net.URLEncoder;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
@@ -32,6 +33,17 @@ import io.grpc.ManagedChannel;
  */
 public record ConnectionInfo(String host, int port, String dbPath, Properties info) {
   /**
+   * Validates that the provided parameters for a {@code ConnectionInfo} object are not null. This
+   * constructor ensures that the mandatory fields required to establish a connection are correctly
+   * defined and non-empty.
+   */
+  public ConnectionInfo {
+    Objects.requireNonNull(host, "host must not be null");
+    Objects.requireNonNull(dbPath, "dbPath must not be null");
+    Objects.requireNonNull(info, "info must not be null");
+  }
+
+  /**
    * Constructs a Basic Authentication header value by encoding the user and password properties
    * from the associated connection information into a Base64 string. If a password is not provided,
    * only the username will be included.
@@ -41,10 +53,14 @@ public record ConnectionInfo(String host, int port, String dbPath, Properties in
    */
   String authentication() {
     final StringBuilder authenticationBuilder = new StringBuilder(20);
-    authenticationBuilder.append(URLEncoder.encode(info.getProperty("user", ""), UTF_8));
-    var password = info.getProperty("password");
+    final String username = info.getProperty("user", System.getProperty("user.name"));
+    if (username.contains(":")) {
+      throw new IllegalArgumentException("Username cannot contain a colon character");
+    }
+    authenticationBuilder.append(username);
+    final String password = info.getProperty("password");
     if (password != null) {
-      authenticationBuilder.append(":").append(URLEncoder.encode(password, UTF_8));
+      authenticationBuilder.append(":").append(password);
     }
     return "Basic %s".formatted(
         Base64.getEncoder().encodeToString(authenticationBuilder.toString().getBytes(UTF_8)));
@@ -56,8 +72,7 @@ public record ConnectionInfo(String host, int port, String dbPath, Properties in
    * @return a {@code ManagedChannel} instance that represents the communication channel to the
    *         remote server.
    */
-  ManagedChannel openChannel() {
-    ChannelCredentials channelCredentials = InsecureChannelCredentials.create();
-    return Grpc.newChannelBuilderForAddress(host, port, channelCredentials).build();
+  ManagedChannel openChannel(Supplier<ChannelCredentials> credentialsSupplier) {
+    return Grpc.newChannelBuilderForAddress(host, port, credentialsSupplier.get()).build();
   }
 }

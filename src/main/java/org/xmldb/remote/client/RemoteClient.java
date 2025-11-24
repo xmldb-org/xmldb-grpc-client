@@ -32,6 +32,7 @@ import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
+import io.grpc.InsecureChannelCredentials;
 import io.grpc.StatusRuntimeException;
 
 /**
@@ -70,7 +71,7 @@ public final class RemoteClient {
    * @return a newly created instance of {@code RemoteClient}
    */
   public static RemoteClient create(ConnectionInfo connectionInfo) {
-    return new RemoteClient(connectionInfo.openChannel(),
+    return new RemoteClient(connectionInfo.openChannel(InsecureChannelCredentials::create),
         new AuthenticationCredentials(connectionInfo::authentication));
   }
 
