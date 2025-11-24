@@ -10,8 +10,6 @@ package org.xmldb.remote.client;
 
 import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 
-import java.time.Instant;
-
 import org.w3c.dom.Node;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXNotRecognizedException;
@@ -21,7 +19,19 @@ import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.modules.XMLResource;
 
+/**
+ * Represents a remote XML resource within a collection. This class provides functionality specific
+ * to handling XML data stored in a remote collection. It extends the {@code RemoteBaseResource}
+ * class and implements the {@code XMLResource} interface.
+ */
 public class RemoteXMLResource extends RemoteBaseResource<String> implements XMLResource {
+  /**
+   * Initializes a new instance of the {@code RemoteXMLResource} class.
+   *
+   * @param id the resource ID
+   * @param resourceMeta the metadata associated with the resource
+   * @param parentCollection the parent collection containing this resource
+   */
   public RemoteXMLResource(String id, ResourceMeta resourceMeta,
       RemoteCollection parentCollection) {
     super(id, resourceMeta, parentCollection);

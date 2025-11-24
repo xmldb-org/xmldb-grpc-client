@@ -11,6 +11,7 @@ package org.xmldb.remote.client;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.net.URLEncoder;
 import java.util.Base64;
 import java.util.Properties;
 
@@ -19,14 +20,42 @@ import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 
+/**
+ * Represents connection details for establishing a connection to a remote service or database. This
+ * record encapsulates the host, port, database path, and a set of additional connection properties.
+ *
+ * @param host the hostname or IP address of the remote server
+ * @param port the port number on which the remote server is listening to
+ * @param dbPath the database path or resource path on the remote server
+ * @param info additional connection properties, including authentication credentials such as "user"
+ *        and "password"
+ */
 public record ConnectionInfo(String host, int port, String dbPath, Properties info) {
+  /**
+   * Constructs a Basic Authentication header value by encoding the user and password properties
+   * from the associated connection information into a Base64 string. If a password is not provided,
+   * only the username will be included.
+   *
+   * @return a string representation of the Basic Authentication header value in the format "Basic
+   *         <base64-encoded-credentials>" where credentials are formatted as "user:password".
+   */
   String authentication() {
-    var username = info.getProperty("user", "");
-    var password = info.getProperty("password", "");
-    var authentication = "%s:%s".formatted(username, password);
-    return "Basic %s".formatted(Base64.getEncoder().encodeToString(authentication.getBytes(UTF_8)));
+    final StringBuilder authenticationBuilder = new StringBuilder(20);
+    authenticationBuilder.append(URLEncoder.encode(info.getProperty("user", ""), UTF_8));
+    var password = info.getProperty("password");
+    if (password != null) {
+      authenticationBuilder.append(":").append(URLEncoder.encode(password, UTF_8));
+    }
+    return "Basic %s".formatted(
+        Base64.getEncoder().encodeToString(authenticationBuilder.toString().getBytes(UTF_8)));
   }
 
+  /**
+   * Opens a gRPC channel to the specified host and port using insecure channel credentials.
+   *
+   * @return a {@code ManagedChannel} instance that represents the communication channel to the
+   *         remote server.
+   */
   ManagedChannel openChannel() {
     ChannelCredentials channelCredentials = InsecureChannelCredentials.create();
     return Grpc.newChannelBuilderForAddress(host, port, channelCredentials).build();

@@ -21,21 +21,38 @@ import org.xmldb.api.base.Database;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.CollectionMeta;
 
+/**
+ * RemoteDatabase is an immutable, thread-safe implementation of the {@link Database} interface. It
+ * extends the {@link RemoteConfigurable} class, enabling configurable settings to interact with a
+ * remote database system. This class serves as a client gateway to manage database collections over
+ * a remote connection, such as a gRPC-enabled database service.
+ */
 public final class RemoteDatabase extends RemoteConfigurable implements Database {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDatabase.class);
 
+  /**
+   * Initializes a new instance of the {@code RemoteDatabase} class.
+   */
+  public RemoteDatabase() {
+    super();
+    LOGGER.debug("RemoteDatabase()");
+  }
+
   @Override
-  public String getConformanceLevel() throws XMLDBException {
+  public String getConformanceLevel() {
+    LOGGER.debug("getConformanceLevel()");
     return "";
   }
 
   @Override
-  public String getName() throws XMLDBException {
+  public String getName() {
+    LOGGER.debug("getName()");
     return "";
   }
 
   @Override
   public Collection getCollection(String uri, Properties info) throws XMLDBException {
+    LOGGER.debug("getCollection({}, {})", uri, info);
     try {
       final var connectionInfo = parseConnectionInfo(uri, info);
       if (connectionInfo != null) {
@@ -55,6 +72,7 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
 
   @Override
   public boolean acceptsURI(String uri) {
+    LOGGER.debug("acceptsURI({})", uri);
     try {
       return parseConnectionInfo(uri, null) != null;
     } catch (RuntimeException e) {

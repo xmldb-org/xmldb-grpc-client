@@ -12,14 +12,24 @@ package org.xmldb.remote.client;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.xmldb.api.base.Configurable;
 
+/**
+ * The RemoteConfigurable class is an implementation of the Configurable interface that provides a
+ * mechanism for managing configuration properties. This class stores configuration properties as
+ * key-value pairs in an internal map and ensures thread-safe operations.
+ */
 public class RemoteConfigurable implements Configurable {
   private final Map<String, String> properties;
 
+  /**
+   * Initializes a new instance of the RemoteConfigurable class.
+   */
   protected RemoteConfigurable() {
-    properties = new HashMap<>();
+    super();
+    properties = new ConcurrentHashMap<>();
   }
 
   @Override

@@ -10,13 +10,27 @@ package org.xmldb.remote.client;
 
 import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 
-import java.time.Instant;
-
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.modules.BinaryResource;
 
+/**
+ * Represents a remote binary resource within a {@link RemoteCollection}. This class provides
+ * methods to manage and interact with binary content stored in a remote resource.
+ *
+ * <p>
+ * This implementation extends the {@link RemoteBaseResource} class specialized for handling binary
+ * data, and implements the {@link BinaryResource} interface to define binary-specific behaviors.
+ * </p>
+ */
 public class RemoteBinaryResource extends RemoteBaseResource<byte[]> implements BinaryResource {
+  /**
+   * Initializes a new instance of the {@code RemoteBinaryResource} class.
+   *
+   * @param id the resource ID
+   * @param resourceMeta the metadata associated with the resource
+   * @param parentCollection the parent collection containing this resource
+   */
   public RemoteBinaryResource(String id, ResourceMeta resourceMeta,
       RemoteCollection parentCollection) {
     super(id, resourceMeta, parentCollection);

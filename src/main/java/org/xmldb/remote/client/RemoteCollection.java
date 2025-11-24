@@ -34,6 +34,16 @@ import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.modules.BinaryResource;
 import org.xmldb.api.modules.XMLResource;
 
+/**
+ * Represents a collection of resources stored remotely and capable of interacting with a remote
+ * client for various collection operations. This class provides functionality for managing
+ * collections and their resources, including creation, retrieval, and listing of resources and
+ * child collections.
+ * <p>
+ * This class extends {@code RemoteConfigurable} to allow storing and retrieving properties for
+ * configuration and implements the {@code Collection} interface to define operations associated
+ * with remote collections.
+ */
 public class RemoteCollection extends RemoteConfigurable implements Collection {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteCollection.class);
 

@@ -34,6 +34,11 @@ import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.StatusRuntimeException;
 
+/**
+ * The {@code RemoteClient} class provides a client for interacting with a remote XML database over
+ * gRPC. It encapsulates operations to manage and query the database system, collections, and
+ * resources.
+ */
 public final class RemoteClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteClient.class);
   private static final Empty EMPTY = Empty.getDefaultInstance();
@@ -49,6 +54,11 @@ public final class RemoteClient {
    */
   RemoteClient(final Channel channel, final CallCredentials callCredentials) {
     blockingStub = XmlDbServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
+  private static XMLDBException handleStatusException(StatusRuntimeException e) {
+    LOGGER.info("RPC failed: {}", e.getStatus());
+    return new XMLDBException(ErrorCodes.VENDOR_ERROR, e.getStatus().getDescription(), e);
   }
 
   /**
@@ -73,20 +83,20 @@ public final class RemoteClient {
     }
   }
 
-  private static XMLDBException handleStatusException(StatusRuntimeException e) {
-    LOGGER.info("RPC failed: {}", e.getStatus());
-    return new XMLDBException(ErrorCodes.VENDOR_ERROR, e.getStatus().getDescription(), e);
-  }
-
   /**
-   * version from server.
+   * Retrieves system information from the remote XML database.
+   *
+   * @return an instance of {@code SystemInfo} containing details about the system configuration and
+   *         status.
+   * @throws XMLDBException if there is an error during the communication with the database or if
+   *         the system information retrieval fails.
    */
   public SystemInfo systemInfo() throws XMLDBException {
     LOGGER.debug("systemInfo()");
     return withStub(stub -> stub.systemInfo(EMPTY));
   }
 
-  public CollectionMeta openRootCollection(String uri, Properties info) throws XMLDBException {
+  CollectionMeta openRootCollection(String uri, Properties info) throws XMLDBException {
     LOGGER.debug("openRootCollection({}, {}})", uri, info);
     return withStub(stub -> {
       final Map<String, String> infoMap = new HashMap<>();
@@ -96,47 +106,45 @@ public final class RemoteClient {
     });
   }
 
-  public CollectionMeta openChildCollection(HandleId collectionHandle, String collectionName)
+  CollectionMeta openChildCollection(HandleId collectionHandle, String collectionName)
       throws XMLDBException {
     LOGGER.debug("openChildCollection({}, {}})", collectionHandle, collectionName);
     return withStub(stub -> stub.openChildCollection(ChildCollectionName.newBuilder()
         .setCollectionId(collectionHandle).setChildName(collectionName).build()));
   }
 
-  public Count resourceCount(HandleId collectionHandle) throws XMLDBException {
+  Count resourceCount(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("resourceCount({})", collectionHandle);
     return withStub(stub -> stub.resourceCount(collectionHandle));
   }
 
-  public Iterator<ResourceId> listResources(HandleId collectionHandle) throws XMLDBException {
+  Iterator<ResourceId> listResources(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("listResources({})", collectionHandle);
     return withStub(stub -> stub.listResources(collectionHandle));
   }
 
-  public Count collectionCount(HandleId collectionHandle) throws XMLDBException {
+  Count collectionCount(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("collectionCount({})", collectionHandle);
     return withStub(stub -> stub.collectionCount(collectionHandle));
   }
 
-  public Iterator<ChildCollectionName> childCollections(HandleId collectionHandle)
-      throws XMLDBException {
+  Iterator<ChildCollectionName> childCollections(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("childCollections({})", collectionHandle);
     return withStub(stub -> stub.childCollections(collectionHandle));
   }
 
-  public void closeCollection(HandleId collectionHandle) throws XMLDBException {
+  void closeCollection(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("closeCollection({})", collectionHandle);
     withStub(stub -> stub.closeCollection(collectionHandle));
   }
 
-  public ResourceMeta openResource(HandleId collectionHandle, String resourceId)
-      throws XMLDBException {
+  ResourceMeta openResource(HandleId collectionHandle, String resourceId) throws XMLDBException {
     LOGGER.debug("openResource({}, {})", collectionHandle, resourceId);
     return withStub(stub -> stub.openResource(ResourceId.newBuilder()
         .setCollectionId(collectionHandle).setResourceId(resourceId).build()));
   }
 
-  public void closeResource(HandleId resourceHandle) throws XMLDBException {
+  void closeResource(HandleId resourceHandle) throws XMLDBException {
     LOGGER.debug("closeResource({})", resourceHandle);
     withStub(stub -> stub.closeResource(resourceHandle));
   }

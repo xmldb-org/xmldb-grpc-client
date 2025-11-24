@@ -19,6 +19,13 @@ import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 
+/**
+ * Represents a base class for remote resources, providing common functionality for resources
+ * managed in a remote resource collection. This class is parameterized to handle specific content
+ * types defined by its concrete subclass.
+ *
+ * @param <R> The type of the resource content handled by the subclass.
+ */
 public abstract class RemoteBaseResource<R> implements Resource<R> {
   private final String id;
   private final AtomicBoolean open;
@@ -26,6 +33,13 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
   private final RemoteCollection parentCollection;
 
 
+  /**
+   * Initializes a new instance of the {@code RemoteBaseResource} class.
+   * 
+   * @param id the resource ID
+   * @param resourceMeta the metadata associated with the resource
+   * @param parentCollection the parent collection containing this resource
+   */
   protected RemoteBaseResource(String id, ResourceMeta resourceMeta,
       RemoteCollection parentCollection) {
     this.id = id;
