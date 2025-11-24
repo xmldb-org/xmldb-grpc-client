@@ -49,7 +49,7 @@ class RemoteDatabaseIT {
     assertThat(collection.getChildCollectionCount()).isEqualTo(1);
     assertThat(collection.listChildCollections()).containsExactlyInAnyOrder("child");
     assertThat(collection.getChildCollection("child")).isNotNull().satisfies(childCol -> {
-      assertResources(childCol, "test3.xml");
+      assertResources(childCol, "test3.xml", "test4.xml", "test5.xml");
       assertThat(childCol.getChildCollectionCount()).isZero();
       assertThat(childCol.listChildCollections()).isEmpty();
       assertThatNoException().isThrownBy(childCol::close);

@@ -14,6 +14,8 @@ import static org.xmldb.api.DatabaseManager.URI_PREFIX;
 
 import java.net.URI;
 import java.util.Properties;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,13 +54,13 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
   }
 
   @Override
-  public Collection getCollection(String uri, Properties info) throws XMLDBException {
+  public Collection getCollection(final String uri, final Properties info) throws XMLDBException {
     LOGGER.debug("getCollection({}, {})", uri, info);
     try {
-      final var connectionInfo = parseConnectionInfo(uri, info);
+      final var connectionInfo = parseConnectionInfo(uri, info, ConnectionInfo::create);
       if (connectionInfo != null) {
         final RemoteClient remoteClient = RemoteClient.create(connectionInfo);
-        final CollectionMeta metaData = remoteClient.openRootCollection(uri, info);
+        final CollectionMeta metaData = remoteClient.openRootCollection(uri, connectionInfo.info());
         if (metaData.getName().isEmpty()) {
           LOGGER.warn("Collection for URI {} not found", uri);
         } else {
@@ -75,23 +77,21 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
   public boolean acceptsURI(String uri) {
     LOGGER.debug("acceptsURI({})", uri);
     try {
-      return parseConnectionInfo(uri, null) != null;
+      return parseConnectionInfo(uri, null, (dbUri, info) -> Boolean.TRUE) != null;
     } catch (RuntimeException e) {
       LOGGER.error("Error accepting URI {}", uri, e);
     }
     return false;
   }
 
-  private static ConnectionInfo parseConnectionInfo(final String uri, final Properties info) {
+  <T> T parseConnectionInfo(final String uri, final Properties info,
+      final BiFunction<URI, Properties, T> action) {
     if (uri.startsWith(URI_PREFIX)) {
       final URI dbUri = URI.create(uri.substring(URI_PREFIX.length()));
       if ("grpc".equals(dbUri.getScheme())) {
-        final int port = dbUri.getPort();
-        if (port > 0) {
-          final String host = dbUri.getHost();
-          if (!host.isEmpty()) {
-            return new ConnectionInfo(host, port, dbUri.getPath(), info);
-          }
+        final String host = dbUri.getHost();
+        if (!host.isEmpty()) {
+          return action.apply(dbUri, info);
         }
       }
     }

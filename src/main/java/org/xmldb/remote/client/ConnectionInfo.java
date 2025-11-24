@@ -12,6 +12,7 @@ package org.xmldb.remote.client;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.net.URI;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Properties;
@@ -19,7 +20,6 @@ import java.util.function.Supplier;
 
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
-import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 
 /**
@@ -41,7 +41,11 @@ public record ConnectionInfo(String host, int port, String dbPath, Properties in
   public ConnectionInfo {
     Objects.requireNonNull(host, "host must not be null");
     Objects.requireNonNull(dbPath, "dbPath must not be null");
-    Objects.requireNonNull(info, "info must not be null");
+    info = Objects.requireNonNullElseGet(info, Properties::new);
+  }
+
+  static ConnectionInfo create(final URI dbUri, final Properties info) {
+    return new ConnectionInfo(dbUri.getHost(), dbUri.getPort(), dbUri.getPath(), info);
   }
 
   /**
