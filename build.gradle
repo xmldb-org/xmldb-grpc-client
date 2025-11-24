@@ -12,6 +12,7 @@ plugins {
   id 'idea'
   id 'java-library'
   id 'maven-publish'
+
   id 'signing'
   id 'com.diffplug.spotless' version '8.1.0'
   id 'com.google.protobuf' version '0.9.5'
@@ -64,6 +65,7 @@ spotless {
   java {
     eclipse().configFile('gradle/xmldb-remote-style.xml')
     importOrderFile('gradle/xmldb-remote.importorder')
+    licenseHeaderFile('gradle/LICENSE_HEADER_java')
     replace('generated', '@javax.annotation.Generated', '@jakarta.annotation.Generated')
   }
 }

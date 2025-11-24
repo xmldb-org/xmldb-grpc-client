@@ -5,8 +5,9 @@
  * writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  * language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package org.xmldb.remote.client;
 
 import static org.assertj.core.api.Assertions.anyOf;
@@ -38,25 +39,27 @@ class RemoteDatabaseTest {
   RemoteDatabase db;
 
   @Test
-  void getConformanceLevel() throws XMLDBException {
+  void getConformanceLevel() {
     assertThat(db.getConformanceLevel()).isEmpty();
   }
 
   @Test
-  void getName() throws XMLDBException {
+  void getName() {
     assertThat(db.getName()).isEmpty();
   }
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-      gugus:grpc:,            false
-      xmldb:exist:,           false
-      xmldb:grpc:,            false
-      xmldb:grpc://,          false
-      xmldb:grpc:// :123,     false
-      xmldb:grpc://host,      false
-      xmldb:grpc://host:0,    false
-      xmldb:grpc://host:9000, true
+      gugus:grpc:,             false
+      xmldb:exist:,            false
+      xmldb:grpc:,             false
+      xmldb:grpc://,           false
+      xmldb:grpc:// :123,      false
+      xmldb:grpc://host,       true
+      xmldb:grpc://[::1],      true
+      xmldb:grpc://host:0,     false
+      xmldb:grpc://host:9000,  true
+      xmldb:grpc://[::1]:9000, true
       """)
   void acceptsURI(String uri, boolean expected) {
     assertThat(db.acceptsURI(uri)).isEqualTo(expected);
