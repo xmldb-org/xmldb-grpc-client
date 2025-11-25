@@ -57,7 +57,7 @@ class RemoteDatabaseTest {
       xmldb:grpc:// :123,      false
       xmldb:grpc://host,       true
       xmldb:grpc://[::1],      true
-      xmldb:grpc://host:0,     false
+      xmldb:grpc://host:0,     true
       xmldb:grpc://host:9000,  true
       xmldb:grpc://[::1]:9000, true
       """)
