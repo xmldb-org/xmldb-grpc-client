@@ -39,7 +39,7 @@ the XML:DB API definition.
 
 Java {java-version} or later is required to build the JAR file.
 
-[source,bash,subs="attributes"]
+[source,bash,subs="verbatim,attributes"]
 ----
 $ git clone https://github.com/{project-full-path}.git
 $ cd {project-name}
@@ -68,7 +68,7 @@ $ gradlew testRemote
 == Getting the binaries for your build
 The latest versions of the API are available at https://search.maven.org/search?q=g:{group-name}
 
-[source,xml]
+[source,xml,subs="verbatim,attributes"]
 ----
 <dependency>
   <groupId>{group-name}</groupId>
