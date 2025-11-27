@@ -53,7 +53,7 @@ dependencies {
   // used for server / client
   implementation 'io.grpc:grpc-netty-shaded:1.77.0'
 
-  errorprone 'com.google.errorprone:error_prone_core:2.44.0'
+  errorprone 'com.google.errorprone:error_prone_core:2.45.0'
 
   testImplementation 'org.assertj:assertj-core:3.27.6'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.1'
