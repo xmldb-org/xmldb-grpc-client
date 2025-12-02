@@ -71,7 +71,7 @@ class RemoteDatabaseTest {
       xmldb:grpc://127.0.0.1:9000/db, johnDoe, mySecret
       """)
   void getCollection(String uri, String user, String secret) throws XMLDBException {
-    remoteClientMock.when(() -> RemoteClient.create(any())).thenReturn(remoteClient);
+    when(RemoteClient.create(any())).thenReturn(remoteClient);
     when(remoteClient.openRootCollection(uri, properties(user, secret)))
         .thenReturn(CollectionMeta.newBuilder().setName("db").build());
 
