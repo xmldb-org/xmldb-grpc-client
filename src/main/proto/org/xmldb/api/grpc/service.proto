@@ -18,6 +18,8 @@ service XmlDbService {
   rpc closeCollection(HandleId) returns (Empty);
   // returns the collection count for the given handle id
   rpc collectionCount(HandleId) returns (Count);
+  // returns a new id for the given collection id
+  rpc createId(HandleId) returns (ResourceId);
   // returns the document count for the given handle id
   rpc resourceCount(HandleId) returns (Count);
   // returns a document id stream for the given handle id
@@ -26,8 +28,12 @@ service XmlDbService {
   rpc childCollections(HandleId) returns (stream ChildCollectionName);
   // open & retrieve a resource for the given document id
   rpc openResource(ResourceId) returns (ResourceMeta);
+  // removes the resource for the given handle
+  rpc removeResource(ResourceId) returns (Empty);
   // close and dispose a resource
   rpc closeResource(HandleId) returns (Empty);
   // returns the resource data for the given handle
-  rpc resourceData(HandleId) returns (stream Data);
+  rpc loadResourceData(HandleId) returns (stream ResourceData);
+  // store the resource data for the given
+  rpc storeResourceData(stream ResourceStoreData) returns (ResourceTransferStatus);
 }

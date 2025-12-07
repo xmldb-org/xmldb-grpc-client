@@ -168,7 +168,8 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public void removeResource(Resource<?> res) throws XMLDBException {
-    LOGGER.warn("removeResource() with {}", res);
+    LOGGER.debug("removeResource() with {}", res);
+    remoteClient.removeResource(metaData.getCollectionId(), res.getId());
   }
 
   @Override
@@ -178,8 +179,8 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public String createId() throws XMLDBException {
-    LOGGER.warn("createId()");
-    return null;
+    LOGGER.debug("createId()");
+    return remoteClient.createId(metaData.getCollectionId());
   }
 
   @Override

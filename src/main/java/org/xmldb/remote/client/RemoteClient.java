@@ -150,4 +150,15 @@ public final class RemoteClient {
     LOGGER.debug("closeResource({})", resourceHandle);
     withStub(stub -> stub.closeResource(resourceHandle));
   }
+
+  void removeResource(HandleId collectionHandle, String resourceId) throws XMLDBException {
+    LOGGER.debug("removeResource({},  {})", collectionHandle, resourceId);
+    withStub(stub -> stub.removeResource(ResourceId.newBuilder().setCollectionId(collectionHandle)
+        .setResourceId(resourceId).build()));
+  }
+
+  String createId(HandleId collectionHandle) throws XMLDBException {
+    LOGGER.debug("createId({})", collectionHandle);
+    return withStub(stub -> stub.createId(collectionHandle)).getResourceId();
+  }
 }

@@ -73,8 +73,29 @@ message ResourceMeta {
   uint64 lastModificationTime = 5;
 }
 
-message Data {
-  bytes dataChunk = 1;
+message ResourceStoreData {
+  ResourceId resourceId = 1;
+  ResourceType type = 2;
+  string contentType = 3;
+  bytes dataChunk = 4;
+}
+
+message ResourceTransferStatus {
+  string message = 1;
+  TransferStatus status = 2;
+}
+
+enum TransferStatus {
+  UNDEFINED = 0;
+  SUCCESS = 1;
+  FAILURE = 2;
+  INVALID = 3;
+  CANCELLED = 4;
+}
+
+message ResourceData {
+  ResourceTransferStatus status = 1;
+  bytes dataChunk = 2;
 }
 
 message Count {
