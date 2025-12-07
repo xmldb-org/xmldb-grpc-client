@@ -151,10 +151,9 @@ public final class RemoteClient {
     withStub(stub -> stub.closeResource(resourceHandle));
   }
 
-  void removeResource(HandleId collectionHandle, String resourceId) throws XMLDBException {
-    LOGGER.debug("removeResource({},  {})", collectionHandle, resourceId);
-    withStub(stub -> stub.removeResource(ResourceId.newBuilder().setCollectionId(collectionHandle)
-        .setResourceId(resourceId).build()));
+  void removeResource(HandleId resourceHandle) throws XMLDBException {
+    LOGGER.debug("removeResource({})", resourceHandle);
+    withStub(stub -> stub.removeResource(resourceHandle));
   }
 
   String createId(HandleId collectionHandle) throws XMLDBException {

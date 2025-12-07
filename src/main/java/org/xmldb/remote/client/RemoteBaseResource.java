@@ -50,6 +50,15 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
     this.parentCollection = parentCollection;
   }
 
+  /**
+   * Retrieves the metadata associated with the resource.
+   *
+   * @return the {@code ResourceMeta} object containing metadata of this resource
+   */
+  protected final ResourceMeta getResourceMeta() {
+    return resourceMeta;
+  }
+
   @Override
   public Collection getParentCollection() {
     return parentCollection;

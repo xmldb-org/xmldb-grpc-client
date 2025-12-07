@@ -29,11 +29,11 @@ service XmlDbService {
   // open & retrieve a resource for the given document id
   rpc openResource(ResourceId) returns (ResourceMeta);
   // removes the resource for the given handle
-  rpc removeResource(ResourceId) returns (Empty);
+  rpc removeResource(HandleId) returns (Empty);
   // close and dispose a resource
   rpc closeResource(HandleId) returns (Empty);
   // returns the resource data for the given handle
-  rpc loadResourceData(HandleId) returns (stream ResourceData);
+  rpc loadResourceData(ResourceLoadRequest) returns (stream ResourceData);
   // store the resource data for the given
-  rpc storeResourceData(stream ResourceStoreData) returns (ResourceTransferStatus);
+  rpc storeResourceData(stream ResourceStoreRequest) returns (ResourceTransferStatus);
 }

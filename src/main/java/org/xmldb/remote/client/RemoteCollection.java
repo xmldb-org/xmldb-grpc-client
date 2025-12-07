@@ -169,7 +169,11 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public void removeResource(Resource<?> res) throws XMLDBException {
     LOGGER.debug("removeResource() with {}", res);
-    remoteClient.removeResource(metaData.getCollectionId(), res.getId());
+    if (res instanceof RemoteBaseResource<?> baseResource) {
+      remoteClient.removeResource(baseResource.getResourceMeta().getResourceId());
+    } else {
+      throw new XMLDBException(INVALID_RESOURCE);
+    }
   }
 
   @Override
