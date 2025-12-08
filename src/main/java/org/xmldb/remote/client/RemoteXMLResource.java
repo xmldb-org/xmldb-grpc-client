@@ -10,7 +10,14 @@
  */
 package org.xmldb.remote.client;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 import org.w3c.dom.Node;
 import org.xml.sax.ContentHandler;
@@ -41,12 +48,14 @@ public class RemoteXMLResource extends RemoteBaseResource<String> implements XML
 
   @Override
   public String getContent() throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    getContentAsStream(outputStream);
+    return outputStream.toString(UTF_8);
   }
 
   @Override
   public void setContent(String value) throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
+    setContent(new ByteArrayInputStream(value.getBytes(UTF_8)));
   }
 
   @Override

@@ -10,11 +10,12 @@
  */
 package org.xmldb.remote.client;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,9 @@ import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.Count;
 import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.HandleId;
+import org.xmldb.api.grpc.ResourceData;
 import org.xmldb.api.grpc.ResourceId;
+import org.xmldb.api.grpc.ResourceLoadRequest;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.grpc.RootCollectionName;
 import org.xmldb.api.grpc.SystemInfo;
@@ -34,7 +37,7 @@ import org.xmldb.api.grpc.XmlDbServiceGrpc;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.InsecureChannelCredentials;
-import io.grpc.StatusRuntimeException;
+import io.grpc.StatusException;
 
 /**
  * The {@code RemoteClient} class provides a client for interacting with a remote XML database over
@@ -45,7 +48,7 @@ public final class RemoteClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteClient.class);
   private static final Empty EMPTY = Empty.getDefaultInstance();
 
-  private final XmlDbServiceGrpc.XmlDbServiceBlockingStub blockingStub;
+  private final XmlDbServiceGrpc.XmlDbServiceBlockingV2Stub blockingStub;
 
   /**
    * Initializes a new instance of the {@code RemoteClient} class with the specified gRPC channel
@@ -55,10 +58,10 @@ public final class RemoteClient {
    * @param callCredentials the call credentials for the gRPC communication
    */
   RemoteClient(final Channel channel, final CallCredentials callCredentials) {
-    blockingStub = XmlDbServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+    blockingStub = XmlDbServiceGrpc.newBlockingV2Stub(channel).withCallCredentials(callCredentials);
   }
 
-  private static XMLDBException handleStatusException(StatusRuntimeException e) {
+  private static XMLDBException handleStatusException(StatusException e) {
     LOGGER.info("RPC failed: {}", e.getStatus());
     return new XMLDBException(ErrorCodes.VENDOR_ERROR, e.getStatus().getDescription(), e);
   }
@@ -76,11 +79,10 @@ public final class RemoteClient {
         new AuthenticationCredentials(connectionInfo::authentication));
   }
 
-  <T> T withStub(Function<XmlDbServiceGrpc.XmlDbServiceBlockingStub, T> action)
-      throws XMLDBException {
+  <T> T withStub(RemoteAction<T> action) throws XMLDBException {
     try {
       return action.apply(blockingStub);
-    } catch (StatusRuntimeException e) {
+    } catch (StatusException e) {
       throw handleStatusException(e);
     }
   }
@@ -122,7 +124,7 @@ public final class RemoteClient {
 
   Iterator<ResourceId> listResources(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("listResources({})", collectionHandle);
-    return withStub(stub -> stub.listResources(collectionHandle));
+    return withStub(stub -> new ClientCallIterator<>(stub.listResources(collectionHandle)));
   }
 
   Count collectionCount(HandleId collectionHandle) throws XMLDBException {
@@ -132,7 +134,7 @@ public final class RemoteClient {
 
   Iterator<ChildCollectionName> childCollections(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("childCollections({})", collectionHandle);
-    return withStub(stub -> stub.childCollections(collectionHandle));
+    return withStub(stub -> new ClientCallIterator<>(stub.childCollections(collectionHandle)));
   }
 
   void closeCollection(HandleId collectionHandle) throws XMLDBException {
@@ -159,5 +161,19 @@ public final class RemoteClient {
   String createId(HandleId collectionHandle) throws XMLDBException {
     LOGGER.debug("createId({})", collectionHandle);
     return withStub(stub -> stub.createId(collectionHandle)).getResourceId();
+  }
+
+  Iterator<ResourceData> loadResource(ResourceLoadRequest request) throws XMLDBException {
+    LOGGER.info("loadResource({})", request);
+    return withStub(stub -> new ClientCallIterator<>(stub.loadResourceData(request)));
+  }
+
+  void storeResource(HandleId resourceHandle, StreamConsumer resourceConsumer)
+      throws XMLDBException {
+    LOGGER.info("storeResource({})", resourceHandle);
+    withStub(stub -> {
+
+      return null;
+    });
   }
 }

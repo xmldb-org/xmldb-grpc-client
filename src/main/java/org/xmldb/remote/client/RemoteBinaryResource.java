@@ -12,6 +12,9 @@ package org.xmldb.remote.client;
 
 import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.modules.BinaryResource;
@@ -40,11 +43,13 @@ public class RemoteBinaryResource extends RemoteBaseResource<byte[]> implements 
 
   @Override
   public byte[] getContent() throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    getContentAsStream(outputStream);
+    return outputStream.toByteArray();
   }
 
   @Override
   public void setContent(byte[] value) throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
+    setContent(new ByteArrayInputStream(value));
   }
 }

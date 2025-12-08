@@ -10,15 +10,23 @@
  */
 package org.xmldb.remote.client;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
+import static org.xmldb.api.base.ErrorCodes.VENDOR_ERROR;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.grpc.ResourceData;
+import org.xmldb.api.grpc.ResourceLoadRequest;
 import org.xmldb.api.grpc.ResourceMeta;
 
 /**
@@ -34,10 +42,12 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
   private final ResourceMeta resourceMeta;
   private final RemoteCollection parentCollection;
 
+  private Instant lastModification;
+  private byte[] content;
 
   /**
    * Initializes a new instance of the {@code RemoteBaseResource} class.
-   * 
+   *
    * @param id the resource ID
    * @param resourceMeta the metadata associated with the resource
    * @param parentCollection the parent collection containing this resource
@@ -48,6 +58,7 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
     this.open = new AtomicBoolean(true);
     this.resourceMeta = resourceMeta;
     this.parentCollection = parentCollection;
+    lastModification = Instant.ofEpochMilli(resourceMeta.getLastModificationTime());
   }
 
   /**
@@ -59,28 +70,78 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
     return resourceMeta;
   }
 
+  /**
+   * Sets the last modification time for the resource.
+   *
+   * @param lastModification the {@code Instant} representing the new last modification time of the
+   *        resource
+   */
+  protected final void setLastModification(Instant lastModification) {
+    this.lastModification = lastModification;
+  }
+
+  /**
+   * Sets the content of the resource using the provided input stream. The content is read from the
+   * input stream and stored internally as a byte array.
+   *
+   * @param content the {@code InputStream} representing the new content to be set for the resource
+   * @throws XMLDBException if an error occurs while reading or processing the input stream
+   */
+  protected final void setContent(InputStream content) throws XMLDBException {
+    try (content; ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      content.transferTo(outputStream);
+      this.content = outputStream.toByteArray();
+    } catch (IOException e) {
+      throw new XMLDBException(VENDOR_ERROR, e);
+    }
+  }
+
   @Override
-  public Collection getParentCollection() {
+  public final Collection getParentCollection() {
     return parentCollection;
   }
 
   @Override
-  public String getId() {
+  public final String getId() {
     return id;
   }
 
   @Override
-  public void getContentAsStream(OutputStream stream) throws XMLDBException {
-    throw new XMLDBException(NOT_IMPLEMENTED);
+  public final void getContentAsStream(OutputStream stream) throws XMLDBException {
+    try {
+      if (content == null) {
+        // TODO: buffer locally to only download once?
+        loadContent(stream);
+      } else {
+        stream.write(content);
+      }
+    } catch (IOException e) {
+      throw new XMLDBException(VENDOR_ERROR, e);
+    }
+  }
+
+  private void loadContent(OutputStream stream) throws XMLDBException {
+    parentCollection.call(client -> {
+      final ResourceLoadRequest request = ResourceLoadRequest.newBuilder()
+          .setResourceId(getResourceMeta().getResourceId()).setChunkSize(4096).build();
+      for (Iterator<ResourceData> resourceDataIterator =
+          client.loadResource(request); resourceDataIterator.hasNext();) {
+        try {
+          stream.write(resourceDataIterator.next().getDataChunk().toByteArray());
+        } catch (IOException e) {
+          throw new XMLDBException(VENDOR_ERROR, e);
+        }
+      }
+    });
   }
 
   @Override
-  public boolean isClosed() {
+  public final boolean isClosed() {
     return !open.get();
   }
 
   @Override
-  public void close() throws XMLDBException {
+  public final void close() throws XMLDBException {
     if (open.compareAndSet(true, false)) {
       parentCollection
           .call(remoteClient -> remoteClient.closeResource(resourceMeta.getResourceId()));
@@ -88,12 +149,12 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
   }
 
   @Override
-  public Instant getCreationTime() {
+  public final Instant getCreationTime() {
     return Instant.ofEpochMilli(resourceMeta.getCreationTime());
   }
 
   @Override
-  public Instant getLastModificationTime() {
-    return Instant.ofEpochMilli(resourceMeta.getLastModificationTime());
+  public final Instant getLastModificationTime() {
+    return lastModification;
   }
 }

@@ -179,6 +179,12 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public void storeResource(Resource<?> res) throws XMLDBException {
     LOGGER.warn("storeResource() with {}", res);
+    if (res instanceof RemoteBaseResource<?> baseResource) {
+      remoteClient.storeResource(baseResource.getResourceMeta().getResourceId(),
+          baseResource::getContentAsStream);
+    } else {
+      throw new XMLDBException(INVALID_RESOURCE);
+    }
   }
 
   @Override
