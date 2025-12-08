@@ -77,7 +77,9 @@ message ResourceStoreRequest {
   ResourceId resourceId = 1;
   ResourceType type = 2;
   string contentType = 3;
-  bytes dataChunk = 4;
+  uint64 creationTime = 4;
+  uint64 lastModificationTime = 5;
+  bytes dataChunk = 6;
 }
 
 message ResourceLoadRequest {
