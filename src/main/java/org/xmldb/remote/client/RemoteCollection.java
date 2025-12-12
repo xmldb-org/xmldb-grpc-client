@@ -13,6 +13,8 @@ package org.xmldb.remote.client;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.xmldb.api.base.ErrorCodes.INVALID_RESOURCE;
+import static org.xmldb.api.base.ResourceType.BINARY_RESOURCE;
+import static org.xmldb.api.base.ResourceType.XML_RESOURCE;
 import static org.xmldb.api.grpc.ResourceType.BINARY;
 import static org.xmldb.api.grpc.ResourceType.XML;
 
@@ -30,10 +32,8 @@ import org.xmldb.api.base.Service;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
-import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
-import org.xmldb.api.grpc.ResourceStoreRequest;
 import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.modules.BinaryResource;
 import org.xmldb.api.modules.XMLResource;
@@ -119,7 +119,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
     final CollectionMeta collectionMeta =
         remoteClient.openChildCollection(metaData.getCollectionId(), childCollectionName);
     if (collectionMeta.getName().isEmpty()) {
-      LOGGER.warn("Child collection {} not found", childCollectionName);
+      LOGGER.warn("Child collection '{}' not found", childCollectionName);
       return null;
     } else {
       return new RemoteCollection(this, remoteClient, collectionMeta);
@@ -144,15 +144,16 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   public <T, R extends Resource<T>> R createResource(String id, Class<R> type)
       throws XMLDBException {
     LOGGER.debug("createResource({}, {})", id, type);
+    final String resourceId = createId(id);
     if (BinaryResource.class.equals(type)) {
-      return type.cast(new RemoteBinaryResource(createId(id), createMeta(BINARY), this));
+      return type.cast(new RemoteBinaryResource(resourceId, createMeta(BINARY, resourceId), this));
     } else if (XMLResource.class.equals(type)) {
-      return type.cast(new RemoteXMLResource(createId(id), createMeta(XML), this));
+      return type.cast(new RemoteXMLResource(resourceId, createMeta(XML, resourceId), this));
     }
     throw new XMLDBException(INVALID_RESOURCE);
   }
 
-  private String createId(String id) throws XMLDBException {
+  private String createId(final String id) throws XMLDBException {
     if (id == null || id.isEmpty()) {
       return createId();
     } else {
@@ -160,10 +161,25 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
     }
   }
 
-  private ResourceMeta createMeta(ResourceType resourceType) {
-    long now = System.currentTimeMillis();
-    return ResourceMeta.newBuilder().setResourceId(HandleId.getDefaultInstance())
-        .setType(resourceType).setCreationTime(now).setLastModificationTime(now).build();
+  private String contentTypeOf(final ResourceType resourceType) {
+    return switch (resourceType) {
+      case BINARY, UNRECOGNIZED -> "application/octet-stream";
+      case XML -> "text/xml";
+    };
+  }
+
+  private ResourceMeta createMeta(final ResourceType resourceType, final String resourceId)
+      throws XMLDBException {
+    return remoteClient.createResource(metaData.getCollectionId(), resourceId,
+        convert(resourceType), contentTypeOf(resourceType));
+  }
+
+  private org.xmldb.api.base.ResourceType convert(ResourceType resourceType) throws XMLDBException {
+    return switch (resourceType) {
+      case XML -> XML_RESOURCE;
+      case BINARY -> BINARY_RESOURCE;
+      case UNRECOGNIZED -> throw new XMLDBException(INVALID_RESOURCE);
+    };
   }
 
   @Override
@@ -189,7 +205,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public void storeResource(Resource<?> res) throws XMLDBException {
-    LOGGER.warn("storeResource() with {}", res);
+    LOGGER.debug("storeResource() with {}", res);
     if (res instanceof RemoteBaseResource<?> baseResource) {
       remoteClient.storeResource(metaData.getCollectionId(), baseResource);
     } else {
@@ -211,6 +227,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   @Override
   public void close() throws XMLDBException {
     if (open.compareAndSet(true, false)) {
+      LOGGER.debug("close()");
       remoteClient.closeCollection(metaData.getCollectionId());
     }
   }

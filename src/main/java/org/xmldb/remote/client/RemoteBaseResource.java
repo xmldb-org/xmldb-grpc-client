@@ -158,4 +158,9 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
   public final Instant getLastModificationTime() {
     return lastModification;
   }
+
+  @Override
+  public String toString() {
+    return "%s(%s)".formatted(getClass().getSimpleName(), id);
+  }
 }

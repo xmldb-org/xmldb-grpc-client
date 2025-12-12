@@ -62,13 +62,13 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
         final RemoteClient remoteClient = RemoteClient.create(connectionInfo);
         final CollectionMeta metaData = remoteClient.openRootCollection(uri, connectionInfo.info());
         if (metaData.getName().isEmpty()) {
-          LOGGER.warn("Collection for URI {} not found", uri);
+          LOGGER.warn("Collection for URI '{}' not found", uri);
         } else {
           return new RemoteCollection(null, remoteClient, metaData);
         }
       }
     } catch (RuntimeException e) {
-      LOGGER.error("Error getting collection for URI {}", uri, e);
+      LOGGER.error("Error getting collection for URI '{}'", uri, e);
     }
     return null;
   }
@@ -79,7 +79,7 @@ public final class RemoteDatabase extends RemoteConfigurable implements Database
     try {
       return parseConnectionInfo(uri, null, (dbUri, info) -> Boolean.TRUE) != null;
     } catch (RuntimeException e) {
-      LOGGER.error("Error accepting URI {}", uri, e);
+      LOGGER.error("Error accepting URI '{}'", uri, e);
     }
     return false;
   }
