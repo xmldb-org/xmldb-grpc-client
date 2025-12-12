@@ -81,7 +81,7 @@ message CreateResourceMeta {
 
 message ResourceStoreRequest {
   HandleId resourceId = 1;
-  bytes dataChunk = 6;
+  bytes dataChunk = 2;
 }
 
 message ResourceLoadRequest {
@@ -90,8 +90,8 @@ message ResourceLoadRequest {
 }
 
 message ResourceTransferStatus {
-  ResourceMeta meta = 1;
-  TransferStatus status = 2;
+  TransferStatus status = 1;
+  optional ResourceMeta meta = 2;
 }
 
 enum TransferStatus {
