@@ -22,7 +22,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.xmldb.api.DatabaseManager;
 import org.xmldb.api.base.Collection;
+import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.modules.BinaryResource;
+import org.xmldb.api.modules.XMLResource;
+
+import net.datafaker.Faker;
 
 @RemoteTest
 class RemoteDatabaseIT {
@@ -42,34 +47,36 @@ class RemoteDatabaseIT {
 
   @ParameterizedTest
   @MethodSource("serverUrls")
-  void getUnkownCollection(String serverUrl) throws XMLDBException {
+  void getUnknownCollection(String serverUrl) throws XMLDBException {
     assertThat(DatabaseManager.getCollection(serverUrl + "Blup")).isNull();
     assertThat(DatabaseManager.getCollection(serverUrl).getChildCollection("Blup")).isNull();
   }
 
   static void assertCollection(Collection collection) throws XMLDBException {
-    assertResources(collection, new Resource("test1.xml", "<root1/>"),
-        new Resource("test2.bin", "content2"));
+    assertResources(collection, new ResourceData("test1.xml", "<root1/>"),
+        new ResourceData("test2.bin", "content2"));
     assertThat(collection.getChildCollectionCount()).isEqualTo(1);
     assertThat(collection.listChildCollections()).containsExactlyInAnyOrder("child");
     assertThat(collection.createId()).isNotNull().isNotBlank();
+    assertResourceOperations(collection);
     assertThat(collection.getChildCollection("child")).isNotNull().satisfies(childCol -> {
-      assertResources(childCol, new Resource("test3.xml", "<root3/>"),
-          new Resource("test4.xml", "<root4/>"), new Resource("test5.bin", "content5"));
+      assertResources(childCol, new ResourceData("test3.xml", "<root3/>"),
+          new ResourceData("test4.xml", "<root4/>"), new ResourceData("test5.bin", "content5"));
       assertThat(childCol.getChildCollectionCount()).isZero();
       assertThat(childCol.listChildCollections()).isEmpty();
       assertThat(childCol.createId()).isNotNull().isNotBlank();
+      assertResourceOperations(childCol);
       assertThatNoException().isThrownBy(childCol::close);
     });
     assertThatNoException().isThrownBy(collection::close);
   }
 
-  static void assertResources(Collection collection, Resource... expectedResources)
+  static void assertResources(Collection collection, ResourceData... expectedResources)
       throws XMLDBException {
     assertThat(collection.getResourceCount()).isEqualTo(expectedResources.length);
     assertThat(collection.listResources()).containsExactlyInAnyOrder(
-        Stream.of(expectedResources).map(Resource::id).toArray(String[]::new));
-    for (Resource expectedResource : expectedResources) {
+        Stream.of(expectedResources).map(ResourceData::id).toArray(String[]::new));
+    for (ResourceData expectedResource : expectedResources) {
       final String id = expectedResource.id();
       assertThat(collection.getResource(id)).isNotNull().satisfies(res -> {
         assertThat(res.getId()).isEqualTo(id);
@@ -80,7 +87,52 @@ class RemoteDatabaseIT {
     }
   }
 
-  record Resource(String id, String content) {
+  static void assertResourceOperations(Collection collection) throws XMLDBException {
+    ResourceData xmlResource = assertStoreNewXmlResource(collection);
+    assertLoadAndRemoveResource(collection, xmlResource);
+    ResourceData binaryResource = assertStoreNewBinaryResource(collection);
+    assertLoadAndRemoveResource(collection, binaryResource);
+  }
+
+  private static ResourceData assertStoreNewXmlResource(Collection collection)
+      throws XMLDBException {
+    try (final XMLResource resource = collection.createResource(null, XMLResource.class)) {
+      assertThat(resource.getId()).isNotNull().isNotBlank();
+      final String content = "<rootContent>%s</rootContent>".formatted(generateData());
+      resource.setContent(content);
+      assertThat(resource.getContent()).isEqualTo(content);
+      collection.storeResource(resource);
+      return new ResourceData(resource.getId(), content);
+    }
+  }
+
+  private static ResourceData assertStoreNewBinaryResource(Collection collection)
+      throws XMLDBException {
+    try (final BinaryResource resource = collection.createResource(null, BinaryResource.class)) {
+      assertThat(resource.getId()).isNotNull().isNotBlank();
+      final byte[] content = generateData().getBytes(UTF_8);
+      resource.setContent(content);
+      assertThat(resource.getContent()).isEqualTo(content);
+      collection.storeResource(resource);
+      return new ResourceData(resource.getId(), new String(content, UTF_8));
+    }
+  }
+
+  private static void assertLoadAndRemoveResource(Collection collection, ResourceData resource)
+      throws XMLDBException {
+    assertThat(collection.listResources()).contains(resource.id());
+    try (final Resource<?> loadedResource = collection.getResource(resource.id())) {
+      assertThat(loadedResource).isNotNull();
+      collection.removeResource(loadedResource);
+    }
+    assertThat(collection.listResources()).doesNotContain(resource.id());
+  }
+
+  private static String generateData() {
+    return new Faker().lorem().fixedString(Constants.DEFAULT_BUFFER_SIZE + 20);
+  }
+
+  record ResourceData(String id, String content) {
   }
 
   static Stream<String> serverUrls() {

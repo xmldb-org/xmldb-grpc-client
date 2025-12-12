@@ -10,20 +10,31 @@
  */
 package org.xmldb.remote;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xmldb.api.grpc.HandleId;
+import org.xmldb.api.grpc.ResourceId;
+import org.xmldb.api.grpc.ResourceStoreRequest;
+import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.remote.client.ConnectionInfo;
 import org.xmldb.remote.client.RemoteClient;
+import org.xmldb.remote.client.ResourceTransferStatusObserver;
+
+import com.google.protobuf.ByteString;
 
 import io.grpc.ChannelCredentials;
 import io.grpc.Grpc;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
+import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
+import io.grpc.stub.StreamObserver;
 
 public class ClientTls {
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientTls.class);
@@ -67,14 +78,16 @@ public class ClientTls {
           /* Only for using provided test certs. */
           .overrideAuthority("foo.test.google.fr").build();
       try {
-        Properties info = new Properties();
+        final Properties info = new Properties();
         info.setProperty("user", "guest");
         info.setProperty("password", "guest");
-        RemoteClient client = RemoteClient.create(new ConnectionInfo(host, port, "/", info));
-        client.systemInfo();
+        final RemoteClient client = RemoteClient.create(new ConnectionInfo(host, port, "/", info));
+        LOGGER.info("Connected to {}", client.systemInfo());
       } finally {
         channel.shutdownNow().awaitTermination(5, TimeUnit.SECONDS);
       }
+    } catch (StatusRuntimeException se) {
+      LOGGER.error("Failed to start client", se.getCause());
     } catch (Exception e) {
       LOGGER.error("Failed to start client", e);
     }

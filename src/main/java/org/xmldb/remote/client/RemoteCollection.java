@@ -13,6 +13,8 @@ package org.xmldb.remote.client;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.xmldb.api.base.ErrorCodes.INVALID_RESOURCE;
+import static org.xmldb.api.grpc.ResourceType.BINARY;
+import static org.xmldb.api.grpc.ResourceType.XML;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,6 +33,7 @@ import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.grpc.ResourceStoreRequest;
 import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.modules.BinaryResource;
 import org.xmldb.api.modules.XMLResource;
@@ -142,14 +145,22 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
       throws XMLDBException {
     LOGGER.debug("createResource({}, {})", id, type);
     if (BinaryResource.class.equals(type)) {
-      return type.cast(new RemoteBinaryResource(id, createResourceMeta(ResourceType.BINARY), this));
+      return type.cast(new RemoteBinaryResource(createId(id), createMeta(BINARY), this));
     } else if (XMLResource.class.equals(type)) {
-      return type.cast(new RemoteXMLResource(id, createResourceMeta(ResourceType.XML), this));
+      return type.cast(new RemoteXMLResource(createId(id), createMeta(XML), this));
     }
     throw new XMLDBException(INVALID_RESOURCE);
   }
 
-  private ResourceMeta createResourceMeta(ResourceType resourceType) {
+  private String createId(String id) throws XMLDBException {
+    if (id == null || id.isEmpty()) {
+      return createId();
+    } else {
+      return id;
+    }
+  }
+
+  private ResourceMeta createMeta(ResourceType resourceType) {
     long now = System.currentTimeMillis();
     return ResourceMeta.newBuilder().setResourceId(HandleId.getDefaultInstance())
         .setType(resourceType).setCreationTime(now).setLastModificationTime(now).build();
@@ -180,8 +191,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   public void storeResource(Resource<?> res) throws XMLDBException {
     LOGGER.warn("storeResource() with {}", res);
     if (res instanceof RemoteBaseResource<?> baseResource) {
-      remoteClient.storeResource(baseResource.getResourceMeta().getResourceId(),
-          baseResource::getContentAsStream);
+      remoteClient.storeResource(metaData.getCollectionId(), baseResource);
     } else {
       throw new XMLDBException(INVALID_RESOURCE);
     }

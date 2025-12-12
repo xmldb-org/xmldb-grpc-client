@@ -10,6 +10,7 @@
  */
 package org.xmldb.remote.client;
 
+import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
 
 import io.grpc.StatusException;

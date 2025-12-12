@@ -10,7 +10,7 @@
  */
 package org.xmldb.remote.client;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.xmldb.api.base.ErrorCodes.VENDOR_ERROR;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,17 +19,19 @@ import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xmldb.api.base.ErrorCodes;
+import org.xmldb.api.base.ResourceType;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
 import org.xmldb.api.grpc.Count;
+import org.xmldb.api.grpc.CreateResourceMeta;
 import org.xmldb.api.grpc.Empty;
 import org.xmldb.api.grpc.HandleId;
 import org.xmldb.api.grpc.ResourceData;
 import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceLoadRequest;
 import org.xmldb.api.grpc.ResourceMeta;
+import org.xmldb.api.grpc.ResourceStoreRequest;
 import org.xmldb.api.grpc.RootCollectionName;
 import org.xmldb.api.grpc.SystemInfo;
 import org.xmldb.api.grpc.XmlDbServiceGrpc;
@@ -38,6 +40,7 @@ import io.grpc.CallCredentials;
 import io.grpc.Channel;
 import io.grpc.InsecureChannelCredentials;
 import io.grpc.StatusException;
+import io.grpc.stub.StreamObserver;
 
 /**
  * The {@code RemoteClient} class provides a client for interacting with a remote XML database over
@@ -48,6 +51,7 @@ public final class RemoteClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(RemoteClient.class);
   private static final Empty EMPTY = Empty.getDefaultInstance();
 
+  private final XmlDbServiceGrpc.XmlDbServiceStub stub;
   private final XmlDbServiceGrpc.XmlDbServiceBlockingV2Stub blockingStub;
 
   /**
@@ -59,11 +63,12 @@ public final class RemoteClient {
    */
   RemoteClient(final Channel channel, final CallCredentials callCredentials) {
     blockingStub = XmlDbServiceGrpc.newBlockingV2Stub(channel).withCallCredentials(callCredentials);
+    stub = XmlDbServiceGrpc.newStub(channel).withCallCredentials(callCredentials);
   }
 
   private static XMLDBException handleStatusException(StatusException e) {
     LOGGER.info("RPC failed: {}", e.getStatus());
-    return new XMLDBException(ErrorCodes.VENDOR_ERROR, e.getStatus().getDescription(), e);
+    return new XMLDBException(VENDOR_ERROR, e.getStatus().getDescription(), e);
   }
 
   /**
@@ -142,6 +147,22 @@ public final class RemoteClient {
     withStub(stub -> stub.closeCollection(collectionHandle));
   }
 
+  ResourceMeta createResource(HandleId collectionHandle, String resourceId, ResourceType type,
+      String contentType) throws XMLDBException {
+    LOGGER.debug("createResource({}, {})", collectionHandle, resourceId);
+    return withStub(stub -> stub.createResource(CreateResourceMeta.newBuilder()
+        .setResourceId(ResourceId.newBuilder().setCollectionId(collectionHandle)
+            .setResourceId(resourceId).build())
+        .setType(convert(type)).setContentType(contentType).build()));
+  }
+
+  org.xmldb.api.grpc.ResourceType convert(ResourceType type) {
+    return switch (type) {
+      case BINARY_RESOURCE -> org.xmldb.api.grpc.ResourceType.BINARY;
+      case XML_RESOURCE -> org.xmldb.api.grpc.ResourceType.XML;
+    };
+  }
+
   ResourceMeta openResource(HandleId collectionHandle, String resourceId) throws XMLDBException {
     LOGGER.debug("openResource({}, {})", collectionHandle, resourceId);
     return withStub(stub -> stub.openResource(ResourceId.newBuilder()
@@ -164,16 +185,29 @@ public final class RemoteClient {
   }
 
   Iterator<ResourceData> loadResource(ResourceLoadRequest request) throws XMLDBException {
-    LOGGER.info("loadResource({})", request);
+    LOGGER.debug("loadResource({})", request);
     return withStub(stub -> new ClientCallIterator<>(stub.loadResourceData(request)));
   }
 
-  void storeResource(HandleId resourceHandle, StreamConsumer resourceConsumer)
+  void storeResource(HandleId collectionHandle, RemoteBaseResource<?> baseResource)
       throws XMLDBException {
-    LOGGER.info("storeResource({})", resourceHandle);
-    withStub(stub -> {
-
-      return null;
-    });
+    LOGGER.debug("storeResource({}, {})", collectionHandle, baseResource);
+    final ResourceStoreRequest.Builder builder = ResourceStoreRequest.newBuilder()
+        .setResourceId(baseResource.getResourceMeta().getResourceId());
+    final ResourceTransferStatusObserver storeObserver = new ResourceTransferStatusObserver();
+    final StreamObserver<ResourceStoreRequest> observer = stub.storeResourceData(storeObserver);
+    try (final ResourceTransferOutputStream outputStream =
+        new ResourceTransferOutputStream(builder, observer)) {
+      baseResource.getContentAsStream(outputStream);
+      observer.onCompleted();
+      storeObserver.awaitCompletion();
+    } catch (XMLDBException e) {
+      observer.onError(e);
+      throw e;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      observer.onError(e);
+      throw new XMLDBException(VENDOR_ERROR, e);
+    }
   }
 }

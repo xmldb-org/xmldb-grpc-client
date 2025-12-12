@@ -10,10 +10,10 @@
  */
 package org.xmldb.remote.client;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 import static org.xmldb.api.base.ErrorCodes.VENDOR_ERROR;
+import static org.xmldb.remote.client.Constants.DEFAULT_BUFFER_SIZE;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,8 +122,9 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
 
   private void loadContent(OutputStream stream) throws XMLDBException {
     parentCollection.call(client -> {
-      final ResourceLoadRequest request = ResourceLoadRequest.newBuilder()
-          .setResourceId(getResourceMeta().getResourceId()).setChunkSize(4096).build();
+      final ResourceLoadRequest request =
+          ResourceLoadRequest.newBuilder().setResourceId(getResourceMeta().getResourceId())
+              .setChunkSize(DEFAULT_BUFFER_SIZE).build();
       for (Iterator<ResourceData> resourceDataIterator =
           client.loadResource(request); resourceDataIterator.hasNext();) {
         try {

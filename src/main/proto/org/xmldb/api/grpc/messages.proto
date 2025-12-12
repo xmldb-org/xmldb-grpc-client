@@ -73,12 +73,14 @@ message ResourceMeta {
   uint64 lastModificationTime = 5;
 }
 
-message ResourceStoreRequest {
+message CreateResourceMeta {
   ResourceId resourceId = 1;
   ResourceType type = 2;
   string contentType = 3;
-  uint64 creationTime = 4;
-  uint64 lastModificationTime = 5;
+}
+
+message ResourceStoreRequest {
+  HandleId resourceId = 1;
   bytes dataChunk = 6;
 }
 
@@ -88,7 +90,7 @@ message ResourceLoadRequest {
 }
 
 message ResourceTransferStatus {
-  string message = 1;
+  ResourceMeta meta = 1;
   TransferStatus status = 2;
 }
 

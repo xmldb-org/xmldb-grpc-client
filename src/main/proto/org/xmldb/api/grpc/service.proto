@@ -29,6 +29,8 @@ service XmlDbService {
   // open & retrieve a resource for the given document id
   rpc openResource(ResourceId) returns (ResourceMeta);
   // removes the resource for the given handle
+  rpc createResource(CreateResourceMeta) returns (ResourceMeta);
+  // removes the resource for the given handle
   rpc removeResource(HandleId) returns (Empty);
   // close and dispose a resource
   rpc closeResource(HandleId) returns (Empty);
