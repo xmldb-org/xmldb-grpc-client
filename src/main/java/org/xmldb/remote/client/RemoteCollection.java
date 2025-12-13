@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.Service;
+import org.xmldb.api.base.ServiceProviderCache;
 import org.xmldb.api.base.XMLDBException;
 import org.xmldb.api.grpc.ChildCollectionName;
 import org.xmldb.api.grpc.CollectionMeta;
@@ -36,7 +38,15 @@ import org.xmldb.api.grpc.ResourceId;
 import org.xmldb.api.grpc.ResourceMeta;
 import org.xmldb.api.grpc.ResourceType;
 import org.xmldb.api.modules.BinaryResource;
+import org.xmldb.api.modules.CollectionManagementService;
+import org.xmldb.api.modules.DatabaseInstanceService;
+import org.xmldb.api.modules.TransactionService;
 import org.xmldb.api.modules.XMLResource;
+import org.xmldb.api.modules.XPathQueryService;
+import org.xmldb.api.modules.XQueryService;
+import org.xmldb.api.modules.XUpdateQueryService;
+import org.xmldb.api.security.PermissionManagementService;
+import org.xmldb.api.security.UserPrincipalLookupService;
 
 /**
  * Represents a collection of resources stored remotely and capable of interacting with a remote
@@ -55,6 +65,8 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   private final RemoteCollection parent;
   private final RemoteClient remoteClient;
   private final CollectionMeta metaData;
+  private final ServiceProviderCache serviceProviderCache =
+      ServiceProviderCache.withRegistered(this::registerProviders);
 
   RemoteCollection(RemoteCollection parent, RemoteClient remoteClient, CollectionMeta metaData) {
     this.parent = parent;
@@ -62,6 +74,19 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
     this.metaData = metaData;
     open = new AtomicBoolean(true);
     LOGGER.debug("Created remote collection {}", this);
+  }
+
+  final void registerProviders(ServiceProviderCache.ProviderRegistry reg) {
+    // modules
+    reg.add(CollectionManagementService.class, () -> new RemoteCollectionManagementService(this));
+    reg.add(DatabaseInstanceService.class, () -> new RemoteDatabaseInstanceService(this));
+    reg.add(TransactionService.class, () -> new RemoteTransactionService(this));
+    reg.add(XPathQueryService.class, () -> new RemoteXPathQueryService(this));
+    reg.add(XQueryService.class, () -> new RemoteXQueryService(this));
+    reg.add(XUpdateQueryService.class, () -> new RemoteXUpdateQueryService(this));
+    // security
+    reg.add(PermissionManagementService.class, () -> new RemotePermissionManagementService(this));
+    reg.add(UserPrincipalLookupService.class, () -> new RemoteUserPrincipalLookupService(this));
   }
 
   interface RemoteClientConsumer {
@@ -234,14 +259,14 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
 
   @Override
   public <S extends Service> boolean hasService(Class<S> serviceType) {
-    LOGGER.warn("hasService({})", serviceType);
-    return false;
+    LOGGER.debug("hasService({})", serviceType);
+    return serviceProviderCache.hasService(serviceType);
   }
 
   @Override
   public <S extends Service> Optional<S> findService(Class<S> serviceType) {
-    LOGGER.warn("findService({})", serviceType);
-    return Optional.empty();
+    LOGGER.debug("findService({})", serviceType);
+    return serviceProviderCache.findService(serviceType);
   }
 
   @Override

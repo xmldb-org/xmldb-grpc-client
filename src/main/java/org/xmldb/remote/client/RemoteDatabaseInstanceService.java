@@ -1,0 +1,40 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License") you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in
+ * writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package org.xmldb.remote.client;
+
+import org.xmldb.api.base.XMLDBException;
+import org.xmldb.api.modules.DatabaseInstanceService;
+
+/**
+ * A service that provides operations for managing remote database instances in an XML:DB-based
+ * system. This class is an implementation of the {@link DatabaseInstanceService} interface and
+ * extends the functionality of {@link RemoteBaseService}.
+ */
+public class RemoteDatabaseInstanceService extends RemoteBaseService
+    implements DatabaseInstanceService {
+
+  RemoteDatabaseInstanceService(RemoteCollection collection) {
+    super(new ServiceInfo("DatabaseInstanceService", "1.0"), collection);
+  }
+
+  @Override
+  public void shutdown() throws XMLDBException {
+    shutdown(0);
+  }
+
+  @Override
+  public void shutdown(long delay) throws XMLDBException {}
+
+  @Override
+  public boolean isLocalInstance() {
+    return false;
+  }
+}
