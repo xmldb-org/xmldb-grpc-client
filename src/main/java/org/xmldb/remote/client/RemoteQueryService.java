@@ -28,18 +28,54 @@ public class RemoteQueryService extends RemoteBaseService {
     super(info, collection);
   }
 
+  /**
+   * Sets a namespace mapping in the internal namespace map used to evaluate queries. If
+   * {@code prefix} is null or empty the default namespace is associated with the provided URI. A
+   * null or empty {@code uri} results in an exception being thrown.
+   *
+   * @param prefix The prefix to set in the map. If {@code prefix} is empty or null the default
+   *        namespace will be associated with the provided URI.
+   * @param uri The URI for the namespace to be associated with prefix.
+   * @throws XMLDBException if an error occurs whilst setting the namespace.
+   */
   public void setNamespace(String prefix, String uri) throws XMLDBException {
     throw new XMLDBException(ErrorCodes.NOT_IMPLEMENTED, "Namespace management is not supported.");
   }
 
+  /**
+   * Returns the URI string associated with {@code prefix} from the internal namespace map. If
+   * {@code prefix} is null or empty the URI for the default namespace will be returned. If a
+   * mapping for the {@code prefix} can not be found null is returned.
+   *
+   * @param prefix The prefix to retrieve from the namespace map.
+   * @return The URI associated with {@code prefix}
+   * @throws org.xmldb.api.base.XMLDBException with expected error codes.
+   *         {@code ErrorCodes.VENDOR_ERROR} for any vendor specific errors that occur.
+   * @throws XMLDBException if an error occurs whilst getting the namespace.
+   */
   public String getNamespace(String prefix) throws XMLDBException {
     throw new XMLDBException(ErrorCodes.NOT_IMPLEMENTED, "Namespace management is not supported.");
   }
 
+  /**
+   * Removes the namespace mapping associated with {@code prefix} from the internal namespace map.
+   * If {@code prefix} is null or empty the mapping for the default namespace will be removed.
+   *
+   * @param prefix The prefix to remove from the namespace map. If {@code prefix} is null or empty
+   *        the mapping for the default namespace will be removed.
+   * @throws org.xmldb.api.base.XMLDBException with expected error codes.
+   *         {@code ErrorCodes.VENDOR_ERROR} for any vendor specific errors that occur.
+   */
   public void removeNamespace(String prefix) throws XMLDBException {
     throw new XMLDBException(ErrorCodes.NOT_IMPLEMENTED, "Namespace management is not supported.");
   }
 
+  /**
+   * Clears all namespace mappings defined.
+   *
+   * @throws XMLDBException with expected error codes. {@code ErrorCodes.VENDOR_ERROR} for any
+   *         vendor specific errors that occur.
+   */
   public void clearNamespaces() throws XMLDBException {
     throw new XMLDBException(ErrorCodes.NOT_IMPLEMENTED, "Namespace management is not supported.");
   }
