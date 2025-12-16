@@ -53,7 +53,7 @@ public class RemoteXMLResource extends RemoteBaseResource implements XMLResource
   @Override
   public void setContent(Object value) throws XMLDBException {
     if (value instanceof String stringValue) {
-      setContent(new ByteArrayInputStream(stringValue.getBytes(UTF_8)));
+      setContentAsStream(new ByteArrayInputStream(stringValue.getBytes(UTF_8)));
     } else {
       throw new XMLDBException(NOT_IMPLEMENTED);
     }

@@ -1,3 +1,5 @@
+import com.diffplug.gradle.spotless.SpotlessTask
+
 /*
  * Licensed under the Apache License, Version 2.0 (the "License") you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -23,6 +25,7 @@ group = 'net.sf.xmldb-org'
 repositories {
   mavenCentral()
   maven { url = 'https://central.sonatype.com/repository/maven-snapshots/' }
+  mavenLocal()
 }
 
 java {
@@ -33,6 +36,14 @@ java {
 
 sourceSets.test {
   java { srcDir 'src/remoteTest/java' }
+}
+
+configurations {
+  tckTests {
+    canBeConsumed = false
+    canBeResolved = true
+    extendsFrom testImplementation, testRuntimeOnly
+  }
 }
 
 configurations.configureEach {
@@ -50,11 +61,14 @@ dependencies {
   implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
   implementation 'net.sf.xmldb-org:xmldb-api:3.0.0-SNAPSHOT'
 
+  tckTests  'net.sf.xmldb-org:xmldb-api-tck:0.1.0-SNAPSHOT'
+
   // used for server / client
   implementation 'io.grpc:grpc-netty-shaded:1.77.0'
 
   errorprone 'com.google.errorprone:error_prone_core:2.45.0'
 
+  testImplementation 'net.sf.xmldb-org:xmldb-api-tck:0.1.0-SNAPSHOT'
   testImplementation 'net.datafaker:datafaker:2.5.3'
   testImplementation 'org.assertj:assertj-core:3.27.6'
   testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.1'
@@ -64,6 +78,7 @@ dependencies {
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.1'
   testRuntimeOnly 'org.junit.platform:junit-platform-engine:6.0.1'
   testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.14.1'
+  testRuntimeOnly 'org.junit.platform:junit-platform-console:6.0.1'
   testRuntimeOnly 'org.mockito:mockito-core:5.21.0'
 }
 
@@ -119,7 +134,7 @@ tasks.withType(JavaCompile).configureEach {
   dependsOn 'spotlessJavaApply'
 }
 
-tasks.withType(com.diffplug.gradle.spotless.SpotlessTask).configureEach {
+tasks.withType(SpotlessTask).configureEach {
   mustRunAfter 'generateProto'
 }
 
@@ -130,28 +145,24 @@ tasks.withType(Test).configureEach {
 }
 
 tasks.named('test') {
-  useJUnitPlatform {
-    excludeTags 'remote'
-  }
-}
-
-tasks.register('testRemote', Test) {
-  group = 'verification'
-  description = 'Runs all live remote tests'
-
-  // Set source sets explicitly
-  testClassesDirs = sourceSets.test.output.classesDirs
-  classpath = sourceSets.test.runtimeClasspath
-
-  useJUnitPlatform {
-    includeTags 'remote'
-  }
-  include('**/*IT.class')
+  useJUnitPlatform()
 }
 
 tasks.register('protobuf', Jar) {
   archiveClassifier = 'proto'
   from 'src/main/proto'
+}
+
+tasks.register('runTck', JavaExec) {
+  group = 'verification'
+  description = 'Runs the TCK tests from the tck source set (for TCK authors)'
+  mainClass = 'org.junit.platform.console.ConsoleLauncher'
+  classpath = files(configurations.tckTests, sourceSets.test.runtimeClasspath)
+  args    'execute',
+          '--details=tree',
+          '--select-package=org.xmldb.tck.tests',
+          '--reports-dir',
+          "${layout.buildDirectory.dir('tck-reports').get().getAsFile()}"
 }
 
 jar {

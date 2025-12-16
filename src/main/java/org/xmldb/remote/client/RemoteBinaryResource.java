@@ -49,7 +49,7 @@ public class RemoteBinaryResource extends RemoteBaseResource implements BinaryRe
   @Override
   public void setContent(Object value) throws XMLDBException {
     if (value instanceof byte[] bytes) {
-      setContent(new ByteArrayInputStream(bytes));
+      setContentAsStream(new ByteArrayInputStream(bytes));
     } else {
       throw new XMLDBException(NOT_IMPLEMENTED);
     }

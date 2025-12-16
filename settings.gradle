@@ -20,4 +20,4 @@ reckon {
 
 rootProject.name = 'xmldb-grpc-client'
 
-//includeBuild('../xmldb-api')
+//includeBuild('../xmldb-api-tck')
