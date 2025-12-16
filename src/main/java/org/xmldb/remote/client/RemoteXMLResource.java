@@ -15,9 +15,6 @@ import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 
 import org.w3c.dom.Node;
 import org.xml.sax.ContentHandler;
@@ -33,7 +30,7 @@ import org.xmldb.api.modules.XMLResource;
  * to handling XML data stored in a remote collection. It extends the {@code RemoteBaseResource}
  * class and implements the {@code XMLResource} interface.
  */
-public class RemoteXMLResource extends RemoteBaseResource<String> implements XMLResource {
+public class RemoteXMLResource extends RemoteBaseResource implements XMLResource {
   /**
    * Initializes a new instance of the {@code RemoteXMLResource} class.
    *
@@ -47,15 +44,19 @@ public class RemoteXMLResource extends RemoteBaseResource<String> implements XML
   }
 
   @Override
-  public String getContent() throws XMLDBException {
+  public Object getContent() throws XMLDBException {
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     getContentAsStream(outputStream);
     return outputStream.toString(UTF_8);
   }
 
   @Override
-  public void setContent(String value) throws XMLDBException {
-    setContent(new ByteArrayInputStream(value.getBytes(UTF_8)));
+  public void setContent(Object value) throws XMLDBException {
+    if (value instanceof String stringValue) {
+      setContent(new ByteArrayInputStream(stringValue.getBytes(UTF_8)));
+    } else {
+      throw new XMLDBException(NOT_IMPLEMENTED);
+    }
   }
 
   @Override

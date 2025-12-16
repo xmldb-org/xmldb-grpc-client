@@ -13,7 +13,6 @@ package org.xmldb.remote.client;
 import static org.xmldb.api.base.ErrorCodes.VENDOR_ERROR;
 import static org.xmldb.remote.client.Constants.DEFAULT_BUFFER_SIZE;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,10 +32,8 @@ import org.xmldb.api.grpc.ResourceMeta;
  * Represents a base class for remote resources, providing common functionality for resources
  * managed in a remote resource collection. This class is parameterized to handle specific content
  * types defined by its concrete subclass.
- *
- * @param <R> The type of the resource content handled by the subclass.
  */
-public abstract class RemoteBaseResource<R> implements Resource<R> {
+public abstract class RemoteBaseResource implements Resource {
   private final String id;
   private final AtomicBoolean open;
   private final ResourceMeta resourceMeta;
@@ -80,22 +77,6 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
     this.lastModification = lastModification;
   }
 
-  /**
-   * Sets the content of the resource using the provided input stream. The content is read from the
-   * input stream and stored internally as a byte array.
-   *
-   * @param content the {@code InputStream} representing the new content to be set for the resource
-   * @throws XMLDBException if an error occurs while reading or processing the input stream
-   */
-  protected final void setContent(InputStream content) throws XMLDBException {
-    try (content; ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      content.transferTo(outputStream);
-      this.content = outputStream.toByteArray();
-    } catch (IOException e) {
-      throw new XMLDBException(VENDOR_ERROR, e);
-    }
-  }
-
   @Override
   public final Collection getParentCollection() {
     return parentCollection;
@@ -115,6 +96,16 @@ public abstract class RemoteBaseResource<R> implements Resource<R> {
       } else {
         stream.write(content);
       }
+    } catch (IOException e) {
+      throw new XMLDBException(VENDOR_ERROR, e);
+    }
+  }
+
+  @Override
+  public void setContentAsStream(InputStream inputStream) throws XMLDBException {
+    try (inputStream; ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      inputStream.transferTo(outputStream);
+      this.content = outputStream.toByteArray();
     } catch (IOException e) {
       throw new XMLDBException(VENDOR_ERROR, e);
     }

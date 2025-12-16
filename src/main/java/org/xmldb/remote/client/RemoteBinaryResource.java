@@ -10,6 +10,8 @@
  */
 package org.xmldb.remote.client;
 
+import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
@@ -24,7 +26,7 @@ import org.xmldb.api.modules.BinaryResource;
  * This implementation extends the {@link RemoteBaseResource} class specialized for handling binary
  * data, and implements the {@link BinaryResource} interface to define binary-specific behaviors.
  */
-public class RemoteBinaryResource extends RemoteBaseResource<byte[]> implements BinaryResource {
+public class RemoteBinaryResource extends RemoteBaseResource implements BinaryResource {
   /**
    * Initializes a new instance of the {@code RemoteBinaryResource} class.
    *
@@ -38,14 +40,18 @@ public class RemoteBinaryResource extends RemoteBaseResource<byte[]> implements 
   }
 
   @Override
-  public byte[] getContent() throws XMLDBException {
+  public Object getContent() throws XMLDBException {
     final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     getContentAsStream(outputStream);
     return outputStream.toByteArray();
   }
 
   @Override
-  public void setContent(byte[] value) throws XMLDBException {
-    setContent(new ByteArrayInputStream(value));
+  public void setContent(Object value) throws XMLDBException {
+    if (value instanceof byte[] bytes) {
+      setContent(new ByteArrayInputStream(bytes));
+    } else {
+      throw new XMLDBException(NOT_IMPLEMENTED);
+    }
   }
 }

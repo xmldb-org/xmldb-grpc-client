@@ -22,7 +22,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
@@ -166,8 +165,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public <T, R extends Resource<T>> R createResource(String id, Class<R> type)
-      throws XMLDBException {
+  public <R extends Resource> R createResource(String id, Class<R> type) throws XMLDBException {
     LOGGER.debug("createResource({}, {})", id, type);
     final String resourceId = createId(id);
     if (BinaryResource.class.equals(type)) {
@@ -208,7 +206,7 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public Resource<?> getResource(String id) throws XMLDBException {
+  public Resource getResource(String id) throws XMLDBException {
     LOGGER.debug("getResource({})", id);
     final ResourceMeta resourceMeta = remoteClient.openResource(metaData.getCollectionId(), id);
     return switch (resourceMeta.getType()) {
@@ -219,9 +217,9 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public void removeResource(Resource<?> res) throws XMLDBException {
+  public void removeResource(Resource res) throws XMLDBException {
     LOGGER.debug("removeResource() with {}", res);
-    if (res instanceof RemoteBaseResource<?> baseResource) {
+    if (res instanceof RemoteBaseResource baseResource) {
       remoteClient.removeResource(baseResource.getResourceMeta().getResourceId());
     } else {
       throw new XMLDBException(INVALID_RESOURCE);
@@ -229,9 +227,9 @@ public class RemoteCollection extends RemoteConfigurable implements Collection {
   }
 
   @Override
-  public void storeResource(Resource<?> res) throws XMLDBException {
+  public void storeResource(Resource res) throws XMLDBException {
     LOGGER.debug("storeResource() with {}", res);
-    if (res instanceof RemoteBaseResource<?> baseResource) {
+    if (res instanceof RemoteBaseResource baseResource) {
       remoteClient.storeResource(metaData.getCollectionId(), baseResource);
     } else {
       throw new XMLDBException(INVALID_RESOURCE);

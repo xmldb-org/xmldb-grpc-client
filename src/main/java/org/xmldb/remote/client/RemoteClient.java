@@ -189,7 +189,7 @@ public final class RemoteClient {
     return withStub(stub -> new ClientCallIterator<>(stub.loadResourceData(request)));
   }
 
-  void storeResource(HandleId collectionHandle, RemoteBaseResource<?> baseResource)
+  void storeResource(HandleId collectionHandle, RemoteBaseResource baseResource)
       throws XMLDBException {
     LOGGER.debug("storeResource({}, {})", collectionHandle, baseResource);
     final ResourceStoreRequest.Builder builder = ResourceStoreRequest.newBuilder()

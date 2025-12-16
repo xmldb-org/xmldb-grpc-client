@@ -145,7 +145,7 @@ class RemoteDatabaseIT {
   static void assertLoadAndRemoveResource(Collection collection, ResourceData resource)
       throws XMLDBException {
     assertThat(collection.listResources()).contains(resource.id());
-    try (final Resource<?> loadedResource = collection.getResource(resource.id())) {
+    try (final Resource loadedResource = collection.getResource(resource.id())) {
       assertThat(loadedResource).isNotNull();
       collection.removeResource(loadedResource);
     }
