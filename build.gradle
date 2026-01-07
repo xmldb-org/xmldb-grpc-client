@@ -54,7 +54,7 @@ configurations.configureEach {
 }
 
 dependencies {
-  implementation 'ch.qos.logback:logback-classic:1.5.23'
+  implementation 'ch.qos.logback:logback-classic:1.5.24'
   implementation 'com.google.protobuf:protobuf-javalite:4.33.2'
   implementation 'io.grpc:grpc-stub:1.78.0'
   implementation 'io.grpc:grpc-protobuf:1.78.0'
@@ -71,14 +71,14 @@ dependencies {
   testImplementation 'net.sf.xmldb-org:xmldb-api-tck:0.1.0-SNAPSHOT'
   testImplementation 'net.datafaker:datafaker:2.5.3'
   testImplementation 'org.assertj:assertj-core:3.27.6'
-  testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:6.0.2'
   testImplementation 'org.mockito:mockito-core:5.21.0'
   testImplementation 'org.mockito:mockito-junit-jupiter:5.21.0'
 
-  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.1'
-  testRuntimeOnly 'org.junit.platform:junit-platform-engine:6.0.1'
-  testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.14.1'
-  testRuntimeOnly 'org.junit.platform:junit-platform-console:6.0.1'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:6.0.2'
+  testRuntimeOnly 'org.junit.platform:junit-platform-engine:6.0.2'
+  testRuntimeOnly 'org.junit.platform:junit-platform-runner:1.14.2'
+  testRuntimeOnly 'org.junit.platform:junit-platform-console:6.0.2'
   testRuntimeOnly 'org.mockito:mockito-core:5.21.0'
 }
 
