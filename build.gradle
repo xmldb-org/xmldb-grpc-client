@@ -66,7 +66,7 @@ dependencies {
   // used for server / client
   implementation 'io.grpc:grpc-netty-shaded:1.78.0'
 
-  errorprone 'com.google.errorprone:error_prone_core:2.45.0'
+  errorprone 'com.google.errorprone:error_prone_core:2.46.0'
 
   testImplementation 'net.sf.xmldb-org:xmldb-api-tck:0.1.0-SNAPSHOT'
   testImplementation 'net.datafaker:datafaker:2.5.3'
