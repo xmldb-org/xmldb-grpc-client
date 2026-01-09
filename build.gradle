@@ -83,7 +83,6 @@ dependencies {
 }
 
 compileJava {
-  options.compilerArgs << '-Xlint:unchecked'
   options.errorprone {
       excludedPaths = '.*/build/generated/sources/proto/.*'
       allErrorsAsWarnings = false
@@ -132,6 +131,7 @@ tasks.withType(Jar).configureEach {
 
 tasks.withType(JavaCompile).configureEach {
   dependsOn 'spotlessJavaApply'
+  options.compilerArgs += ['-Xlint:unchecked', '-XDaddTypeAnnotationsToSymbol=true']
 }
 
 tasks.withType(SpotlessTask).configureEach {
