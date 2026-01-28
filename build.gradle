@@ -17,7 +17,7 @@ plugins {
   id 'signing'
   id 'com.diffplug.spotless' version '8.2.1'
   id 'com.google.protobuf' version '0.9.6'
-  id 'net.ltgt.errorprone' version '4.4.0'
+  id 'net.ltgt.errorprone' version '5.0.0'
 }
 
 group = 'net.sf.xmldb-org'
