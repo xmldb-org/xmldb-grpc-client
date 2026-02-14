@@ -54,7 +54,7 @@ configurations.configureEach {
 }
 
 dependencies {
-  implementation 'ch.qos.logback:logback-classic:1.5.29'
+  implementation 'ch.qos.logback:logback-classic:1.5.30'
   implementation 'com.google.protobuf:protobuf-javalite:4.33.5'
   implementation 'io.grpc:grpc-stub:1.79.0'
   implementation 'io.grpc:grpc-protobuf:1.79.0'
