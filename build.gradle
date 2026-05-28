@@ -15,7 +15,7 @@ plugins {
   id 'java-library'
   id 'maven-publish'
   id 'signing'
-  id 'com.diffplug.spotless' version '8.5.1'
+  id 'com.diffplug.spotless' version '8.6.0'
   id 'com.google.protobuf' version '0.10.0'
   id 'net.ltgt.errorprone' version '5.1.0'
 }
@@ -54,7 +54,7 @@ configurations.configureEach {
 }
 
 dependencies {
-  implementation 'ch.qos.logback:logback-classic:1.5.32'
+  implementation 'ch.qos.logback:logback-classic:1.5.33'
   implementation 'com.google.protobuf:protobuf-javalite:4.35.0'
   implementation 'io.grpc:grpc-stub:1.81.0'
   implementation 'io.grpc:grpc-protobuf:1.81.0'
