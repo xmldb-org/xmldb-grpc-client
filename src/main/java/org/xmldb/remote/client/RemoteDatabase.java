@@ -15,7 +15,6 @@ import static org.xmldb.api.DatabaseManager.URI_PREFIX;
 import java.net.URI;
 import java.util.Properties;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
