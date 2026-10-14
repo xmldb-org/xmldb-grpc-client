@@ -63,7 +63,7 @@ dependencies {
   tckTests  'net.sf.xmldb-org:xmldb-api-tck:0.1.0-SNAPSHOT'
 
   // used for server / client
-  implementation 'io.grpc:grpc-netty-shaded:1.84.3'
+  implementation 'io.grpc:grpc-netty-shaded:1.85.0'
 
   errorprone 'com.google.errorprone:error_prone_core:2.50.0'
 
@@ -108,7 +108,7 @@ protobuf {
     // the identifier, which can be referred to in the "plugins"
     // container of the "generateProtoTasks" closure.
     grpc {
-      artifact = 'io.grpc:protoc-gen-grpc-java:1.84.3'
+      artifact = 'io.grpc:protoc-gen-grpc-java:1.85.0'
     }
   }
   generateProtoTasks {
